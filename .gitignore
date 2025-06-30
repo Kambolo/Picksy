@@ -1,0 +1,42 @@
+# === Maven ===
+target/
+*.log
+*.class
+
+# Maven wrapper
+.mvn/wrapper/maven-wrapper.jar
+
+# === Environment & Config ===
+.env
+.DS_Store
+
+# === Databases, volumes ===
+postgres/
+
+# === IDEs ===
+# IntelliJ
+.idea/
+*.iml
+
+# Eclipse / Spring Tool Suite
+.apt_generated/
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache/
+
+# NetBeans
+nbproject/private/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# VSCode
+.vscode/
+
+# === System ===
+Thumbs.db
+
