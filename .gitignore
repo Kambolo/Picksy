@@ -1,42 +1,60 @@
-# === Maven ===
-target/
-*.log
+### Java ###
 *.class
+*.jar
+*.war
+*.ear
 
-# Maven wrapper
-.mvn/wrapper/maven-wrapper.jar
-
-# === Environment & Config ===
-.env
-.DS_Store
-
-# === Databases, volumes ===
-postgres/
-
-# === IDEs ===
-# IntelliJ
+### IntelliJ IDEA ###
 .idea/
 *.iml
+*.ipr
+*.iws
+out/
 
-# Eclipse / Spring Tool Suite
-.apt_generated/
-.classpath
-.factorypath
+### Eclipse ###
 .project
+.classpath
 .settings/
-.springBeans
-.sts4-cache/
+.target/
 
-# NetBeans
-nbproject/private/
-nbbuild/
-dist/
-nbdist/
-.nb-gradle/
-
-# VSCode
+### VS Code ###
 .vscode/
 
-# === System ===
+### Build output ###
+/target/
+/build/
+/out/
+
+### OS junk ###
+.DS_Store
 Thumbs.db
+
+### Logs ###
+*.log
+
+### Environment files ###
+.env
+*.env
+
+### Dependency directories ###
+/node_modules/
+
+### Maven ###
+.mvn/
+!**/src/main/**/.gitkeep
+
+### Gradle ###
+.gradle/
+build/
+!gradle-wrapper.jar
+gradle-app.setting
+
+### Test reports ###
+/test-output/
+/surefire-reports/
+/jacoco.exec
+
+### Others ###
+*.swp
+*.swo
 

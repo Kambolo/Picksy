@@ -29,7 +29,8 @@ public class Category {
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Option> options;
 
-    private String author;
+    @Column(name="author_id")
+    private Long authorID;
 
     @Column(name = "photo_url")
     private String photoUrl;

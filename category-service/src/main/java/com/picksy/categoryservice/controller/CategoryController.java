@@ -58,9 +58,9 @@ public class CategoryController {
     }
 
     @Operation(summary = "Get a categories for author with pagination", description = "Fetches all categories for author with optional pagination, sorting, and ordering.")
-    @GetMapping("/{author}")
-    public ResponseEntity<Page<CategoryDTO>> getAllCategoriesForAuthor(
-            @Parameter(description = "Username of the author") @PathVariable("author") String author,
+    @GetMapping("/{authorId}")
+    public Page<CategoryDTO> getAllCategoriesForAuthor(
+            @Parameter(description = "User ID") @PathVariable("authorId") Long authorId,
             @Parameter(description = "Page number (default is 0)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size (default is 5)") @RequestParam(defaultValue = "5") int size,
             @Parameter(description = "Sort by field (default is 'id')") @RequestParam(defaultValue = "id") String sortBy,
@@ -68,7 +68,34 @@ public class CategoryController {
     ) throws BadRequestException {
         Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
-        return ResponseEntity.status(HttpStatus.OK).body(categoryService.findAllByAuthor(pageable, author));
+        return categoryService.findAllByAuthorID(pageable, authorId);
+    }
+
+    @Operation(summary = "Get built in categories for author with pagination", description = "Fetches all built in categories with optional pagination, sorting, and ordering.")
+    @GetMapping("/builtIn")
+    public Page<CategoryDTO> getBuiltInCategories(
+            @Parameter(description = "Page number (default is 0)") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size (default is 5)") @RequestParam(defaultValue = "5") int size,
+            @Parameter(description = "Sort by field (default is 'id')") @RequestParam(defaultValue = "id") String sortBy,
+            @Parameter(description = "Sort ascending? (default is true)") @RequestParam(defaultValue = "true") boolean ascending
+    ){
+        Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
+        return categoryService.findBuiltInCategories(pageable);
+    }
+
+    @Operation(summary = "Get categories containing given pattern with pagination", description = "Fetches all categories based on given pattern with optional pagination, sorting, and ordering.")
+    @GetMapping("/search")
+    public Page<CategoryDTO> getCategoriesByPattern(
+            @Parameter(description = "Pattern") @RequestParam String pattern,
+            @Parameter(description = "Page number (default is 0)") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size (default is 5)") @RequestParam(defaultValue = "5") int size,
+            @Parameter(description = "Sort by field (default is 'id')") @RequestParam(defaultValue = "id") String sortBy,
+            @Parameter(description = "Sort ascending? (default is true)") @RequestParam(defaultValue = "true") boolean ascending
+    ){
+        Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
+        return categoryService.findCategoriesByPattern(pattern, pageable);
     }
 
     @Operation(summary = "Delete a category", description = "Removes a category and its associated image by category ID.")

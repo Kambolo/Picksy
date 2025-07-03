@@ -11,5 +11,7 @@ import java.util.Optional;
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, Long> {
     Optional<Category> findById(Long id);
-    Page<Category> findAllByAuthorIgnoreCase(String author, Pageable pageable);
+    Page<Category> findAllByAuthorID(Long id, Pageable pageable);
+    Page<Category> findByNameContaining(String pattern, Pageable pageable);
+    Page<Category> findByAuthorIDIsNull(Pageable pageable);
 }

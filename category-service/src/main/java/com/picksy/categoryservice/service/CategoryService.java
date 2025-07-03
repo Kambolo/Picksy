@@ -26,7 +26,7 @@ public class CategoryService {
 
     public CategoryDTO findDTOById(Long id) throws BadRequestException{
         Category category = findById(id);
-        return new CategoryDTO(category.getId(), category.getName(), category.getAuthor(), category.getType(), category.getPhotoUrl());
+        return new CategoryDTO(category.getId(), category.getName(), category.getAuthorID(), category.getType(), category.getPhotoUrl());
     }
 
     Category findById(Long id) throws BadRequestException {
@@ -38,13 +38,13 @@ public class CategoryService {
                 .map( category -> new CategoryDTO(
                         category.getId(),
                         category.getName(),
-                        category.getAuthor(),
+                        category.getAuthorID(),
                         category.getType(),
                         category.getPhotoUrl()));
     }
 
-    public Page<CategoryDTO> findAllByAuthor(Pageable pageable, String author) throws BadRequestException {
-        Page<Category> categories = categoryRepository.findAllByAuthorIgnoreCase(author, pageable);
+    public Page<CategoryDTO> findAllByAuthorID(Pageable pageable, Long authorID) throws BadRequestException {
+        Page<Category> categories = categoryRepository.findAllByAuthorID(authorID, pageable);
 
         if (categories.isEmpty()) {
             throw new BadRequestException("Category not found.");
@@ -53,7 +53,31 @@ public class CategoryService {
         return categories.map(category -> new CategoryDTO(
                 category.getId(),
                 category.getName(),
-                category.getAuthor(),
+                category.getAuthorID(),
+                category.getType(),
+                category.getPhotoUrl()
+        ));
+    }
+
+    public Page<CategoryDTO> findBuiltInCategories(Pageable pageable) {
+        Page<Category> categories = categoryRepository.findByAuthorIDIsNull(pageable);
+
+        return categories.map(category -> new CategoryDTO(
+                category.getId(),
+                category.getName(),
+                category.getAuthorID(),
+                category.getType(),
+                category.getPhotoUrl()
+        ));
+    }
+
+    public Page<CategoryDTO> findCategoriesByPattern(String pattern, Pageable pageable) {
+        Page<Category> categories = categoryRepository.findByNameContaining(pattern, pageable);
+
+        return categories.map(category -> new CategoryDTO(
+                category.getId(),
+                category.getName(),
+                category.getAuthorID(),
                 category.getType(),
                 category.getPhotoUrl()
         ));
@@ -61,16 +85,25 @@ public class CategoryService {
 
     @Transactional
     public CategoryDTO create(CategoryBody catBody) throws BadRequestException {
+
+        if(catBody.name() == null || catBody.name().isBlank()) throw new BadRequestException("Category name is required.");
+
+        try{
+            Type.valueOf(catBody.type());
+        }catch (Exception e){
+            throw new BadRequestException("Bad category type.");
+        }
+
         try{
             Category category = Category.builder()
                     .name(catBody.name())
-                    .author(catBody.author())
+                    .authorID(catBody.author())
                     .type(Type.valueOf(catBody.type()))
                     .build();
 
             Category savedCategory = categoryRepository.save(category);
 
-            return new CategoryDTO(savedCategory.getId(), savedCategory.getName(), savedCategory.getAuthor(), savedCategory.getType(), null);
+            return new CategoryDTO(savedCategory.getId(), savedCategory.getName(), savedCategory.getAuthorID(), savedCategory.getType(), null);
         }catch (Exception e){
             throw new BadRequestException("Bad category body.");
         }
@@ -123,7 +156,7 @@ public class CategoryService {
         }
 
         if (categoryBody.author() != null) {
-            category.setAuthor(categoryBody.author());
+            category.setAuthorID(categoryBody.author());
         }
 
         if (categoryBody.type() != null) {
@@ -137,4 +170,5 @@ public class CategoryService {
 
         categoryRepository.save(category);
     }
+
 }

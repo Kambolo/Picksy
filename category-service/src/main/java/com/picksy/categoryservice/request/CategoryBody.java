@@ -2,6 +2,6 @@ package com.picksy.categoryservice.request;
 
 public record CategoryBody(
                         String name,
-                        String author,
+                        Long author,
                         String type){
 }
