@@ -58,3 +58,5 @@ gradle-app.setting
 *.swp
 *.swo
 
+### Postgres files ###
+postgres/
