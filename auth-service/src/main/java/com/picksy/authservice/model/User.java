@@ -6,6 +6,7 @@ import lombok.*;
 
 @Entity
 @Data
+@Table(name = "users")
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -24,4 +25,5 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     private ROLE role;
+
 }

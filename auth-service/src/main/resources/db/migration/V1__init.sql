@@ -1,7 +1,7 @@
-CREATE TABLE IF NOT EXISTS user (
+CREATE TABLE IF NOT EXISTS users (
     id SERIAL primary key,
-    name varchar(50) not null,
-    type varchar(50) not null,
-    author_id bigint default null,
-    photo_url varchar(250) default null
+    username varchar(100) not null,
+    password varchar(100) not null,
+    email varchar(100) not null,
+    Role varchar(25) not null
     );

@@ -6,6 +6,7 @@ import com.picksy.authservice.Util.JwtUtil;
 import com.picksy.authservice.model.User;
 import com.picksy.authservice.request.UserSignInBody;
 import com.picksy.authservice.request.UserSignUpBody;
+import com.picksy.authservice.response.UserDTO;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.apache.coyote.BadRequestException;
@@ -28,7 +29,7 @@ public class AuthService {
     private final PasswordEncoder encoder;
     private final JwtUtil jwtUtils;
 
-    public String authenticateUser(UserSignInBody user,  HttpServletResponse response) {
+    public UserDTO authenticateUser(UserSignInBody user,  HttpServletResponse response) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         user.username(),
@@ -48,7 +49,8 @@ public class AuthService {
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
-        return "Login successful";
+        User savedUser = userRepository.findByUsername(user.username());
+        return new UserDTO(savedUser.getId(), user.username(), savedUser.getEmail());
     }
 
     public String registerUser(UserSignUpBody user) throws BadRequestException {

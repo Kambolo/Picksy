@@ -12,7 +12,10 @@ public class CloudinaryConfig {
 
     @Bean
     public Cloudinary cloudinary() {
-        Dotenv dotenv = Dotenv.load();
+        Dotenv dotenv = Dotenv.configure()
+                .directory("./category-service") // katalog roboczy projektu
+                .filename(".env")
+                .load();
         return new Cloudinary(dotenv.get("CLOUDINARY_URL"));
     }
 }
