@@ -12,10 +12,10 @@ import lombok.RequiredArgsConstructor;
 import org.apache.coyote.BadRequestException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -29,29 +29,39 @@ public class AuthService {
     private final PasswordEncoder encoder;
     private final JwtUtil jwtUtils;
 
-    public UserDTO authenticateUser(UserSignInBody user,  HttpServletResponse response) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        user.username(),
-                        user.password()
-                )
-        );
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        String jwt = jwtUtils.generateToken(userDetails.getUsername());
+    private static final String TOPIC = "register-user";
+    private final KafkaTemplate<String, Long> kafkaTemplate;
 
-        ResponseCookie cookie = ResponseCookie.from("jwt", jwt)
-                .httpOnly(true)
-                .secure(true)
-                .path("/")
-                .maxAge(24 * 60 * 60) // 1 dzień
-                .sameSite("Strict")
-                .build();
+    public UserDTO authenticateUser(UserSignInBody user, HttpServletResponse response) throws BadRequestException {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            user.username(),
+                            user.password()
+                    )
+            );
 
-        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            String jwt = jwtUtils.generateToken(userDetails.getUsername());
 
-        User savedUser = userRepository.findByUsername(user.username());
-        return new UserDTO(savedUser.getId(), user.username(), savedUser.getEmail());
+            ResponseCookie cookie = ResponseCookie.from("jwt", jwt)
+                    .httpOnly(true)
+                    .secure(true)
+                    .path("/")
+                    .maxAge(24 * 60 * 60)
+                    .sameSite("Strict")
+                    .build();
+
+            response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
+            User savedUser = userRepository.findByUsername(user.username());
+            return new UserDTO(savedUser.getId(), user.username(), savedUser.getEmail());
+
+        } catch (org.springframework.security.authentication.BadCredentialsException ex) {
+            throw new BadRequestException("Invalid username or password");
+        }
     }
+
 
     public String registerUser(UserSignUpBody user) throws BadRequestException {
         if (userRepository.existsByUsername(user.username())) {
@@ -68,7 +78,10 @@ public class AuthService {
                 user.email(),
                 ROLE.USER
         );
-        userRepository.save(newUser);
+        User savedUser = userRepository.save(newUser);
+
+        kafkaTemplate.send(TOPIC, savedUser.getId());
+
         return "User registered successfully!";
     }
 
@@ -77,7 +90,7 @@ public class AuthService {
                 .httpOnly(true)
                 .secure(true)
                 .path("/")
-                .maxAge(0) // 0 dni, usuwamy ciasteczko
+                .maxAge(0)
                 .sameSite("Strict")
                 .build();
 

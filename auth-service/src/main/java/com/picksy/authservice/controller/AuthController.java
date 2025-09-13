@@ -19,7 +19,7 @@ public class AuthController {
 
     @PostMapping("/signin")
     public ResponseEntity<UserDTO> authenticateUser(@RequestBody UserSignInBody user,
-                                                    HttpServletResponse response) {
+                                                    HttpServletResponse response) throws BadRequestException {
        return ResponseEntity.ok().body(authService.authenticateUser(user, response));
     }
 
@@ -32,5 +32,4 @@ public class AuthController {
     public ResponseEntity<String> logoutUser(HttpServletResponse response) {
         return ResponseEntity.ok().body(authService.logoutUser(response));
     }
-
 }

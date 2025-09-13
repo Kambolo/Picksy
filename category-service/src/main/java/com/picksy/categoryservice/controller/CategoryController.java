@@ -29,13 +29,13 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @Operation(summary = "Create a new category", description = "Creates a new category using the provided request body.")
-    @PostMapping
+    @PostMapping("/secure")
     public ResponseEntity<CategoryDTO> createCategory(@RequestBody CategoryBody catBody) throws BadRequestException {
         return ResponseEntity.status(HttpStatus.CREATED).body(categoryService.create(catBody));
     }
 
     @Operation(summary = "Upload an image for a category", description = "Adds an image to an existing category by category ID.")
-    @PostMapping(value = "/image/{catId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/secure/image/{catId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> addCategoryImage(
             @Parameter(description = "Image file to upload") @RequestParam MultipartFile image,
             @Parameter(description = "ID of the category to attach the image to") @PathVariable Long catId
@@ -45,7 +45,7 @@ public class CategoryController {
     }
 
     @Operation(summary = "Get all categories with pagination", description = "Fetches all categories with optional pagination, sorting, and ordering.")
-    @GetMapping
+    @GetMapping("/public")
     public ResponseEntity<Page<CategoryDTO>> getAllCategories(
             @Parameter(description = "Page number (default is 0)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size (default is 5)") @RequestParam(defaultValue = "5") int size,
@@ -58,7 +58,7 @@ public class CategoryController {
     }
 
     @Operation(summary = "Get a categories for author with pagination", description = "Fetches all categories for author with optional pagination, sorting, and ordering.")
-    @GetMapping("/{authorId}")
+    @GetMapping("/public/{authorId}")
     public Page<CategoryDTO> getAllCategoriesForAuthor(
             @Parameter(description = "User ID") @PathVariable("authorId") Long authorId,
             @Parameter(description = "Page number (default is 0)") @RequestParam(defaultValue = "0") int page,
@@ -71,21 +71,19 @@ public class CategoryController {
         return categoryService.findAllByAuthorID(pageable, authorId);
     }
 
-    @Operation(summary = "Get built in categories for author with pagination", description = "Fetches all built in categories with optional pagination, sorting, and ordering.")
-    @GetMapping("/builtIn")
+    @Operation(summary = "Get built in categories with pagination", description = "Fetches all built in categories with optional pagination, sorting, and ordering.")
+    @GetMapping("/public/builtIn")
     public Page<CategoryDTO> getBuiltInCategories(
             @Parameter(description = "Page number (default is 0)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size (default is 5)") @RequestParam(defaultValue = "5") int size,
-            @Parameter(description = "Sort by field (default is 'id')") @RequestParam(defaultValue = "id") String sortBy,
             @Parameter(description = "Sort ascending? (default is true)") @RequestParam(defaultValue = "true") boolean ascending
     ){
-        Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy);
-        Pageable pageable = PageRequest.of(page, size, sort);
+        Pageable pageable = PageRequest.of(page, size);
         return categoryService.findBuiltInCategories(pageable);
     }
 
     @Operation(summary = "Get categories containing given pattern with pagination", description = "Fetches all categories based on given pattern with optional pagination, sorting, and ordering.")
-    @GetMapping("/search")
+    @GetMapping("/public/search")
     public Page<CategoryDTO> getCategoriesByPattern(
             @Parameter(description = "Pattern") @RequestParam String pattern,
             @Parameter(description = "Page number (default is 0)") @RequestParam(defaultValue = "0") int page,
@@ -99,7 +97,7 @@ public class CategoryController {
     }
 
     @Operation(summary = "Delete a category", description = "Removes a category and its associated image by category ID.")
-    @DeleteMapping("/{catId}")
+    @DeleteMapping("/secure/{catId}")
     public ResponseEntity<String> deleteCategory(
             @Parameter(description = "ID of the category to delete") @PathVariable Long catId
     ) throws BadRequestException, FileUploadException, MalformedURLException {
@@ -108,7 +106,7 @@ public class CategoryController {
     }
 
     @Operation(summary = "Delete a category image", description = "Removes a category image by category ID.")
-    @DeleteMapping("/image/{catId}")
+    @DeleteMapping("/secure/image/{catId}")
     public ResponseEntity<String> deleteCategoryImage(
             @Parameter(description = "ID of the category ") @PathVariable Long catId
     ) throws BadRequestException, FileUploadException, MalformedURLException {
@@ -116,7 +114,7 @@ public class CategoryController {
         return ResponseEntity.status(HttpStatus.OK).body("Category image removed.");
     }
 
-    @PatchMapping("{catId}")
+    @PatchMapping("/secure/{catId}")
     @Operation(
             summary = "Update category info",
             description = "Updates the category associated with the given category ID."

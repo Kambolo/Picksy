@@ -25,7 +25,7 @@ public class OptionController {
     private final OptionService optionService;
 
     @Operation(summary = "Finds all options for category", description = "Fetch all options for specific category.")
-    @GetMapping("/{catId}")
+    @GetMapping("/public/{catId}")
     public ResponseEntity<List<OptionDTO>> findAllForCategory(@PathVariable Long catId) throws BadRequestException {
         return ResponseEntity.status(HttpStatus.OK).body(optionService.findAllForCategory(catId));
     }

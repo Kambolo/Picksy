@@ -132,7 +132,7 @@ public class CategoryService {
 
         removeImg(id);
 
-        categoryRepository.delete(findById(id));
+        categoryRepository.delete(category);
     }
 
     @Transactional

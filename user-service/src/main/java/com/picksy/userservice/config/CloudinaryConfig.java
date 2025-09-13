@@ -1,4 +1,4 @@
-package com.picksy.categoryservice.config;
+package com.picksy.userservice.config;
 
 import com.cloudinary.Cloudinary;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,3 +16,4 @@ public class CloudinaryConfig {
         return new Cloudinary(cloudinaryUrl);
     }
 }
+

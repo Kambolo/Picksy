@@ -15,8 +15,6 @@ import lombok.NoArgsConstructor;
 @Builder
 public class Profile {
     @Id
-    private Long id;
-
     @Column(name = "user_id")
     private Long userId;
 
