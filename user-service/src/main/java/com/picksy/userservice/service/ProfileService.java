@@ -57,7 +57,7 @@ public class ProfileService {
 
     @Transactional
     public void deleteAvatar(Long id) throws MalformedURLException, FileUploadException, BadRequestException {
-        Optional<Profile> profileOptional = profileRepository.findById(id);
+        Optional<Profile> profileOptional = profileRepository.findByUserId(id);
 
         if(profileOptional.isEmpty()) throw new BadRequestException("Avatar with user id - " + id + " does not exist.");
 

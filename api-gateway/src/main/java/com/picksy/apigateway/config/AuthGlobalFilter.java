@@ -23,7 +23,8 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
             "/auth/",
             "/api/category/public",
             "/api/option/public",
-            "/api/profile/public"
+            "/api/profile/public",
+            "/api/room/public"
     );
 
     @Override

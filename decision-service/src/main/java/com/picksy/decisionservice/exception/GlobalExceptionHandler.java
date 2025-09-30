@@ -1,4 +1,4 @@
-package com.picksy.roomservice.exception;
+package com.picksy.decisionservice.exception;
 
 import org.apache.coyote.BadRequestException;
 import org.springframework.http.ResponseEntity;

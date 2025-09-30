@@ -3,5 +3,7 @@ package com.picksy.roomservice.util;
 public enum MessageType {
     JOIN,
     LEAVE,
-    UPDATE
+    ROOM_CLOSED,
+    VOTING_STARTED,
+    NEXT_CATEGORY
 }

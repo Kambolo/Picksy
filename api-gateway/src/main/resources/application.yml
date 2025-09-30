@@ -14,11 +14,38 @@ spring:
           uri: lb://AUTH-SERVICE
           predicates:
             - Path=/auth/**
+
         - id: user-service
           uri: lb://USER-SERVICE
           predicates:
             - Path=/api/profile/**
+
         - id: category-service
           uri: lb://CATEGORY-SERVICE
           predicates:
             - Path=/api/category/**
+
+        - id: room-service
+          uri: lb://ROOM-SERVICE
+          predicates:
+            - Path=/api/room/**
+
+        - id: room-service-ws
+          uri: lb://ROOM-SERVICE
+          predicates:
+            - Path=/ws-room/**
+          filters:
+            - name: RewritePath
+              args:
+                regexp: /ws-room/(?<segment>.*)
+                replacement: /ws-room/${segment}
+
+        - id: decision-service-ws
+          uri: lb://DECISION-SERVICE
+          predicates:
+            - Path=/ws-poll/**
+          filters:
+            - name: RewritePath
+              args:
+                regexp: /ws-room/(?<segment>.*)
+                replacement: /ws-room/${segment}

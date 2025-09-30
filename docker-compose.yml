@@ -102,11 +102,11 @@ services:
       - POSTGRES_DB=${POSTGRES_DB_USERSERVICE}
 
   room-service:
-    build: ./user-service
+    build: ./room-service
     ports:
-      - "${SERVER_PORT_USERSERVICE}:8080"
+      - "${SERVER_PORT_ROOMSERVICE}:8080"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://user-db:5432/${POSTGRES_DB_ROOMSERVICE}
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://room-db:5432/${POSTGRES_DB_ROOMSERVICE}
       - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER_ROOMSERVICE}
       - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD_ROOMSERVICE}
 
@@ -118,12 +118,36 @@ services:
     ports:
       - "${POSTGRES_PORT_ROOMSERVICE}:5432"
     volumes:
-      - ./user-service/postgres:/var/lib/postgresql/data
-      - ./user-service/init/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./room-service/postgres:/var/lib/postgresql/data
+      - ./room-service/init:/docker-entrypoint-initdb.d
     environment:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD_ROOMSERVICE}
       - POSTGRES_USER=${POSTGRES_USER_ROOMSERVICE}
       - POSTGRES_DB=${POSTGRES_DB_ROOMSERVICE}
+
+  decision-service:
+    build: ./decision-service
+    ports:
+      - "${SERVER_PORT_DECISIONSERVICE}:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://decision-db:5432/${POSTGRES_DB_DECISIONSERVICE}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER_DECISIONSERVICE}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD_DECISIONSERVICE}
+
+    depends_on:
+      - decision-db
+
+  decision-db:
+    image: postgres:14-alpine
+    ports:
+      - "${POSTGRES_PORT_DECISIONSERVICE}:5432"
+    volumes:
+      - ./decision-service/postgres:/var/lib/postgresql/data
+      - ./decision-service/init:/docker-entrypoint-initdb.d
+    environment:
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD_DECISIONSERVICE}
+      - POSTGRES_USER=${POSTGRES_USER_DECISIONSERVICE}
+      - POSTGRES_DB=${POSTGRES_DB_DECISIONSERVICE}
 
   kafka:
     image: bitnami/kafka:latest
