@@ -34,7 +34,7 @@ public class DecisionService {
                 vote(roomCode, catId, pollMessage);
 
             case MessageType.END:
-                end()
+                end(roomCode, catId, pollMessage);
         }
 
     }
@@ -76,6 +76,10 @@ public class DecisionService {
         choiceRepository.save(choice);
     }
 
-    protected void end(String roomCode, Long catId)
+    protected void end(String roomCode, Long catId, PollMessage pollMessage){
+        pollRepository.findByRoomCodeAndCategoryId(roomCode, catId).orElseThrow(() -> new BadRequestException("Poll not found"));
+        messagingTemplate.convertAndSend("/topic/poll/"+ roomCode + "/" + catId,
+                new PollMessage(null, false, MessageType.END));
+    }
 
 }
