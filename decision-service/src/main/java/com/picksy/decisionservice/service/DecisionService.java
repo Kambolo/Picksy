@@ -32,6 +32,9 @@ public class DecisionService {
 
             case MessageType.VOTE:
                 vote(roomCode, catId, pollMessage);
+
+            case MessageType.END:
+                end()
         }
 
     }
@@ -72,5 +75,7 @@ public class DecisionService {
         choice.setCount(choice.getCount() + 1);
         choiceRepository.save(choice);
     }
+
+    protected void end(String roomCode, Long catId)
 
 }
