@@ -20,7 +20,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
     private final JwtUtil jwtUtils;
 
     private final List<String> publicPaths = List.of(
-            "/auth/",
+            "/auth",
             "/api/category/public",
             "/api/option/public",
             "/api/profile/public",

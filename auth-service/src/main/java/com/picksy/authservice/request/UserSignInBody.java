@@ -1,5 +1,6 @@
 package com.picksy.authservice.request;
 
-public record UserSignInBody(String username,
-                             String password){
+public record UserSignInBody(String email,
+                             String password,
+                             boolean rememberMe) {
 }

@@ -1,13 +1,20 @@
 package com.picksy.authservice.service;
 
+import com.picksy.authservice.Util.CodeGenerator;
 import com.picksy.authservice.Util.ROLE;
+import com.picksy.authservice.model.ForgotPassword;
+import com.picksy.authservice.repository.ForgotPasswordRepository;
 import com.picksy.authservice.repository.UserRepository;
 import com.picksy.authservice.Util.JwtUtil;
 import com.picksy.authservice.model.User;
+import com.picksy.authservice.request.CheckCodeBody;
+import com.picksy.authservice.request.ResetPasswordBody;
+import com.picksy.authservice.response.EmailDetails;
 import com.picksy.authservice.request.UserSignInBody;
 import com.picksy.authservice.request.UserSignUpBody;
 import com.picksy.authservice.response.UserDTO;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.coyote.BadRequestException;
 import org.springframework.http.HttpHeaders;
@@ -20,6 +27,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -28,6 +37,8 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder encoder;
     private final JwtUtil jwtUtils;
+    private final EmailService emailService;
+    private final ForgotPasswordRepository forgotPasswordRepository;
 
     private static final String TOPIC = "register-user";
     private final KafkaTemplate<String, Long> kafkaTemplate;
@@ -36,7 +47,7 @@ public class AuthService {
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
-                            user.username(),
+                            user.email(),
                             user.password()
                     )
             );
@@ -44,40 +55,42 @@ public class AuthService {
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
             String jwt = jwtUtils.generateToken(userDetails.getUsername());
 
+            long maxAge = user.rememberMe() ? 7 * 24 * 60 * 60 : -1;
+
             ResponseCookie cookie = ResponseCookie.from("jwt", jwt)
                     .httpOnly(true)
                     .secure(true)
                     .path("/")
-                    .maxAge(24 * 60 * 60)
+                    .maxAge(maxAge)
                     .sameSite("Strict")
                     .build();
 
+
             response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
-            User savedUser = userRepository.findByUsername(user.username());
-            return new UserDTO(savedUser.getId(), user.username(), savedUser.getEmail());
+            User savedUser = userRepository.findByEmailIgnoreCase(user.email());
+            return new UserDTO(savedUser.getId(), user.email(), savedUser.getEmail());
 
         } catch (org.springframework.security.authentication.BadCredentialsException ex) {
-            throw new BadRequestException("Invalid username or password");
+            throw new BadRequestException("Invalid email or password");
         }
     }
 
 
     public String registerUser(UserSignUpBody user) throws BadRequestException {
         if (userRepository.existsByUsername(user.username())) {
-            throw new BadRequestException("Username already exists");
+            throw new BadRequestException("Nazwa użytkownika jest już zajęta.");
         }
-        if(userRepository.existsByEmail(user.email())){
-            throw new BadRequestException("Email already exists");
+        if(userRepository.existsByEmailIgnoreCase(user.email())){
+            throw new BadRequestException("Konto z takim adresem email już istnieje.");
         }
 
-        User newUser = new User(
-                null,
-                user.username(),
-                encoder.encode(user.password()),
-                user.email(),
-                ROLE.USER
-        );
+        User newUser = User.builder()
+                .username(user.username())
+                .password(encoder.encode(user.password()))
+                .email(user.email())
+                .role(ROLE.USER)
+                .build();
         User savedUser = userRepository.save(newUser);
 
         kafkaTemplate.send(TOPIC, savedUser.getId());
@@ -98,4 +111,90 @@ public class AuthService {
         return "Logged out successfully";
     }
 
+    @Transactional
+    public void sendResetPasswordEmail(String email) throws BadRequestException {
+        if(!userRepository.existsByEmailIgnoreCase(email)){
+            throw new BadRequestException("Podany emial nie istnieje w naszej bazie.");
+        }
+
+        User user = userRepository.findByEmailIgnoreCase(email);
+
+        String resetCode = CodeGenerator.generateResetCode();
+
+        ForgotPassword forgotPassword = forgotPasswordRepository.findByUser(user);
+
+        if(forgotPassword == null) {
+            forgotPasswordRepository.save(ForgotPassword.builder()
+                    .user(user)
+                    .resetCode(resetCode)
+                    .expirationTime(LocalDateTime.now().plusMinutes(10))
+                    .activated(false)
+                    .build());
+        } else{
+            forgotPassword.setResetCode(resetCode);
+            forgotPassword.setExpirationTime(LocalDateTime.now().plusMinutes(10));
+            forgotPasswordRepository.save(forgotPassword);
+        }
+
+
+        String msgBody = "Your reset code: " + resetCode;
+
+        EmailDetails emailDetails = new EmailDetails(
+                email,
+                msgBody,
+                "Password reset");
+
+        emailService.sendSimpleMail(emailDetails);
+    }
+
+    @Transactional
+    public void checkResetCode(CheckCodeBody checkCodeBody) throws BadRequestException {
+        if(!userRepository.existsByEmailIgnoreCase(checkCodeBody.email())){
+            throw new BadRequestException("Podany email nie istnieje w naszej bazie.");
+        }
+
+        User user = userRepository.findByEmailIgnoreCase(checkCodeBody.email());
+
+        if(!forgotPasswordRepository.existsByUser(user)){
+            throw new BadRequestException("Kod nie został wygenerowany");
+        }
+
+        if(forgotPasswordRepository.findByResetCodeAndUser(checkCodeBody.code(), user)==null){
+            throw new BadRequestException("Niepoprawny kod resetu");
+        }
+
+        ForgotPassword forgotPassword = forgotPasswordRepository.findByResetCodeAndUser(checkCodeBody.code(), user);
+
+        if(LocalDateTime.now().isAfter(forgotPassword.getExpirationTime())){
+            throw new BadRequestException("Kod resetu utracił ważność");
+        }
+
+        forgotPassword.setActivated(true);
+        forgotPasswordRepository.save(forgotPassword);
+    }
+
+    @Transactional
+    public void resetPassword(ResetPasswordBody resetPasswordBody) throws BadRequestException {
+        if(!userRepository.existsByEmailIgnoreCase(resetPasswordBody.email())){
+            throw new BadRequestException("Podany email nie istnieje w naszej bazie.");
+        }
+
+        User user = userRepository.findByEmailIgnoreCase(resetPasswordBody.email());
+
+        if(!forgotPasswordRepository.existsByUser(user)){
+            throw new BadRequestException("Kod nie został wygenerowany");
+        }
+
+        ForgotPassword forgotPassword = forgotPasswordRepository.findByResetCodeAndUser(resetPasswordBody.code(), user);
+
+        if(!forgotPassword.isActivated()){
+            throw new BadRequestException("Błąd podaczas resetowania hasła");
+        }
+
+        forgotPassword.setActivated(false);
+        forgotPasswordRepository.save(forgotPassword);
+
+        user.setPassword(encoder.encode(resetPasswordBody.password()));
+        userRepository.save(user);
+    }
 }

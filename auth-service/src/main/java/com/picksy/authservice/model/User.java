@@ -26,4 +26,7 @@ public class User {
     @Enumerated(EnumType.STRING)
     private ROLE role;
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, optional = true)
+    private ForgotPassword forgotPassword;
+
 }
