@@ -7,6 +7,7 @@ import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
@@ -50,11 +51,13 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
         }
 
         String username = jwtUtils.getUsernameFromToken(token);
-        exchange.getRequest().mutate()
+        ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
                 .header("X-User-Name", username)
                 .build();
 
-        return chain.filter(exchange);
+        ServerWebExchange mutatedExchange = exchange.mutate().request(mutatedRequest).build();
+
+        return chain.filter(mutatedExchange);
     }
 
     private String parseJwt(ServerWebExchange exchange) {

@@ -69,7 +69,7 @@ public class AuthService {
             response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
             User savedUser = userRepository.findByEmailIgnoreCase(user.email());
-            return new UserDTO(savedUser.getId(), user.email(), savedUser.getEmail());
+            return new UserDTO(savedUser.getId(), savedUser.getUsername(), savedUser.getEmail());
 
         } catch (org.springframework.security.authentication.BadCredentialsException ex) {
             throw new BadRequestException("Invalid email or password");
@@ -197,4 +197,13 @@ public class AuthService {
         user.setPassword(encoder.encode(resetPasswordBody.password()));
         userRepository.save(user);
     }
+
+    public UserDTO loadUserByUsername(String username) {
+        User savedUser = userRepository.findByEmailIgnoreCase(username);
+        if (savedUser == null) {
+            throw new RuntimeException("User not found");
+        }
+        return new UserDTO(savedUser.getId(), savedUser.getUsername(), savedUser.getEmail());
+    }
+
 }
