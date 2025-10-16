@@ -1,6 +1,9 @@
 package com.picksy.authservice.request;
 
-public record UserSignInBody(String email,
-                             String password,
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
+public record UserSignInBody(@NotBlank String email,
+                             @NotBlank String password,
                              boolean rememberMe) {
 }

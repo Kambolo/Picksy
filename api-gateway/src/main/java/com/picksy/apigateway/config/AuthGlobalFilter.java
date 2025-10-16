@@ -36,6 +36,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
 
         for (String publicPath : publicPaths) {
             if (path.startsWith(publicPath)) {
+                if(path.startsWith("/auth/account/secure/me")) continue;
                 System.out.println("AuthGlobalFilter - Public endpoint: " + path);
                 return chain.filter(exchange);
             }
@@ -50,9 +51,12 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
             return exchange.getResponse().setComplete();
         }
 
-        String username = jwtUtils.getUsernameFromToken(token);
+        Long userId = jwtUtils.getUserIdFromToken(token);
+        String email = jwtUtils.getEmailFromToken(token);
+
         ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
-                .header("X-User-Name", username)
+                .header("X-User-Id", String.valueOf(userId))
+                .header("X-User-Email", email != null ? email : "")
                 .build();
 
         ServerWebExchange mutatedExchange = exchange.mutate().request(mutatedRequest).build();

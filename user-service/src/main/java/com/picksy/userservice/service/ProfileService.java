@@ -34,8 +34,8 @@ public class ProfileService {
     public void createNewProfile(Long userId){
         Profile profile = Profile.builder()
                 .userId(userId)
-                .avatarUrl(null)
-                .bio(null)
+                .avatarUrl("https://res.cloudinary.com/dctiucda1/image/upload/v1760520939/default.png")
+                .bio("")
                 .build();
         System.out.println("new profile created with user id: " + userId);
         profileRepository.save(profile);
@@ -46,12 +46,16 @@ public class ProfileService {
         Profile profile = profileRepository.findByUserId(id).orElseThrow(() -> new BadRequestException("User not found."));
         if(newBio.length() > 500) throw new BadRequestException("Max BIO length is 500. Requested BIO length is - " + newBio.length());
         profile.setBio(newBio);
+        profileRepository.save(profile);
     }
 
 
     @Transactional
     public String changeAvatar(MultipartFile image, Long id) throws FileUploadException {
+        Profile profile = profileRepository.findByUserId(id).orElseThrow(() -> new BadRequestException("User not found."));
         String path = uploadPhoto(AVATAR_PATH, image, id, "avatar");
+        profile.setAvatarUrl(path);
+        profileRepository.save(profile);
         return path;
     }
 
@@ -91,7 +95,7 @@ public class ProfileService {
             throw new FileUploadException("Allowed file extensions: " + allowed);
         }
 
-        filename = filePrefix + id + ".jpg";
+        filename = filePrefix + id;
 
         Map options = ObjectUtils.asMap(
                 "public_id", filename,

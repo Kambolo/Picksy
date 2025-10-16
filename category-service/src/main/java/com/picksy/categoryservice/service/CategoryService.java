@@ -26,7 +26,7 @@ public class CategoryService {
 
     public CategoryDTO findDTOById(Long id) throws BadRequestException{
         Category category = findById(id);
-        return new CategoryDTO(category.getId(), category.getName(), category.getAuthorID(), category.getType(), category.getPhotoUrl());
+        return new CategoryDTO(category.getId(), category.getName(), category.getAuthorID(), category.getType(), category.getPhotoUrl(), category.getDescription());
     }
 
     Category findById(Long id) throws BadRequestException {
@@ -40,7 +40,8 @@ public class CategoryService {
                         category.getName(),
                         category.getAuthorID(),
                         category.getType(),
-                        category.getPhotoUrl()));
+                        category.getPhotoUrl(),
+                        category.getDescription()));
     }
 
     public Page<CategoryDTO> findAllByAuthorID(Pageable pageable, Long authorID) throws BadRequestException {
@@ -55,7 +56,8 @@ public class CategoryService {
                 category.getName(),
                 category.getAuthorID(),
                 category.getType(),
-                category.getPhotoUrl()
+                category.getPhotoUrl(),
+                category.getDescription()
         ));
     }
 
@@ -67,7 +69,8 @@ public class CategoryService {
                 category.getName(),
                 category.getAuthorID(),
                 category.getType(),
-                category.getPhotoUrl()
+                category.getPhotoUrl(),
+                category.getDescription()
         ));
     }
 
@@ -79,7 +82,8 @@ public class CategoryService {
                 category.getName(),
                 category.getAuthorID(),
                 category.getType(),
-                category.getPhotoUrl()
+                category.getPhotoUrl(),
+                category.getDescription()
         ));
     }
 
@@ -99,11 +103,17 @@ public class CategoryService {
                     .name(catBody.name())
                     .authorID(catBody.author())
                     .type(Type.valueOf(catBody.type()))
+                    .description(catBody.description())
                     .build();
 
             Category savedCategory = categoryRepository.save(category);
 
-            return new CategoryDTO(savedCategory.getId(), savedCategory.getName(), savedCategory.getAuthorID(), savedCategory.getType(), null);
+            return new CategoryDTO(savedCategory.getId(),
+                    savedCategory.getName(),
+                    savedCategory.getAuthorID(),
+                    savedCategory.getType(),
+                    "https://res.cloudinary.com/dctiucda1/image/upload/v1760618779/image_a9gqss.png",
+                    savedCategory.getDescription());
         }catch (Exception e){
             throw new BadRequestException("Bad category body.");
         }

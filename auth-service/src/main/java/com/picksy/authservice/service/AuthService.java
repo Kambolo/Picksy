@@ -28,6 +28,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -53,7 +54,9 @@ public class AuthService {
             );
 
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            String jwt = jwtUtils.generateToken(userDetails.getUsername());
+            User savedUser = userRepository.findByEmailIgnoreCase(user.email());
+
+            String jwt = jwtUtils.generateToken(userDetails, savedUser.getId(), savedUser.getEmail());
 
             long maxAge = user.rememberMe() ? 7 * 24 * 60 * 60 : -1;
 
@@ -68,7 +71,6 @@ public class AuthService {
 
             response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
-            User savedUser = userRepository.findByEmailIgnoreCase(user.email());
             return new UserDTO(savedUser.getId(), savedUser.getUsername(), savedUser.getEmail());
 
         } catch (org.springframework.security.authentication.BadCredentialsException ex) {
@@ -78,7 +80,7 @@ public class AuthService {
 
 
     public String registerUser(UserSignUpBody user) throws BadRequestException {
-        if (userRepository.existsByUsername(user.username())) {
+        if (userRepository.existsByUsernameIgnoreCase(user.username())) {
             throw new BadRequestException("Nazwa użytkownika jest już zajęta.");
         }
         if(userRepository.existsByEmailIgnoreCase(user.email())){
@@ -198,12 +200,5 @@ public class AuthService {
         userRepository.save(user);
     }
 
-    public UserDTO loadUserByUsername(String username) {
-        User savedUser = userRepository.findByEmailIgnoreCase(username);
-        if (savedUser == null) {
-            throw new RuntimeException("User not found");
-        }
-        return new UserDTO(savedUser.getId(), savedUser.getUsername(), savedUser.getEmail());
-    }
 
 }

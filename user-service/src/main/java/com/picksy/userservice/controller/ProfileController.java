@@ -1,6 +1,7 @@
 package com.picksy.userservice.controller;
 
 import com.picksy.userservice.exception.FileUploadException;
+import com.picksy.userservice.response.MessageResponse;
 import com.picksy.userservice.response.ProfileDTO;
 import com.picksy.userservice.service.ProfileService;
 import lombok.RequiredArgsConstructor;
@@ -21,21 +22,21 @@ public class ProfileController {
         return ResponseEntity.ok().body(profileService.findByUserId(id));
     }
 
-    @PostMapping("/secure/{id}/bio")
-    public ResponseEntity<String> changeBio(@PathVariable Long id, @RequestBody String bio){
+    @PatchMapping("/secure/{id}/bio")
+    public ResponseEntity<MessageResponse> changeBio(@PathVariable Long id, @RequestBody String bio){
         profileService.changeBio(id, bio);
-        return ResponseEntity.ok().body("Bio for user id - " + id + " changed");
+        return ResponseEntity.ok(new MessageResponse("Bio for user id - " + id + " changed"));
     }
 
-    @PostMapping("/secure/{id}/avatar")
-    public ResponseEntity<String> changeAvatar(@PathVariable Long id, @RequestParam MultipartFile image) throws FileUploadException {
+    @PatchMapping("/secure/{id}/avatar")
+    public ResponseEntity<MessageResponse> changeAvatar(@PathVariable Long id, @RequestParam MultipartFile image) throws FileUploadException {
         profileService.changeAvatar(image ,id);
-        return ResponseEntity.ok().body("Avatar for user id - " + id + " changed");
+        return ResponseEntity.ok(new MessageResponse(profileService.changeAvatar(image ,id)));
     }
 
     @DeleteMapping("/secure/{id}/avatar")
-    public ResponseEntity<String> deleteAvatar(@PathVariable Long id) throws MalformedURLException, FileUploadException {
+    public ResponseEntity<MessageResponse> deleteAvatar(@PathVariable Long id) throws MalformedURLException, FileUploadException {
         profileService.deleteAvatar(id);
-        return ResponseEntity.ok().body("Avatar for user id - " + id + " deleted");
+        return ResponseEntity.ok(new MessageResponse("Avatar for user id - " + id + " deleted"));
     }
 }

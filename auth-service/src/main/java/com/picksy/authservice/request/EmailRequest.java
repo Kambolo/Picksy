@@ -1,4 +1,8 @@
 package com.picksy.authservice.request;
 
-public record EmailRequest(String email) {
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+
+public record EmailRequest(@NotBlank
+                           @Email(message = "Invalid email format")String email) {
 }

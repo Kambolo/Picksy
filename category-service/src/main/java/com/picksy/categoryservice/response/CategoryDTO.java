@@ -7,5 +7,6 @@ public record CategoryDTO(
                     String name,
                     Long authorID,
                     Type type,
-                    String photoURL) {
+                    String photoURL,
+                    String description) {
 }

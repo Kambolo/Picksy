@@ -14,52 +14,27 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
-@RequiredArgsConstructor
 public class WebSecurityConfig {
 
-    private final CustomUserDetailsService userDetailsService;
-    private final AuthEntryPointJwt unauthorizedHandler;
-    private final AuthTokenFilter authTokenFilter;
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+                .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.disable())
+                .authorizeHttpRequests(auth -> auth
+                        .anyRequest().permitAll()
+                );
+        return http.build();
+    }
 
     @Bean
-    public AuthenticationManager authenticationManager(
-            AuthenticationConfiguration authenticationConfiguration
-    ) throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+        return authConfig.getAuthenticationManager();
     }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(csrf -> csrf.disable())
-                .cors(cors -> cors.disable())
-                .exceptionHandling(exceptionHandling ->
-                        exceptionHandling.authenticationEntryPoint(unauthorizedHandler)
-                )
-                .sessionManagement(sessionManagement ->
-                        sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
-                .addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class)
-                .authorizeHttpRequests(authorizeRequests ->
-                        authorizeRequests
-                                // Public endpoints - NO authentication needed
-                                .requestMatchers("/auth/signin").permitAll()
-                                .requestMatchers("/auth/signup").permitAll()
-                                .requestMatchers("/auth/refresh").permitAll()
-
-                                // Protected endpoints - AUTHENTICATION required
-                                .requestMatchers("/auth/me").authenticated()
-                                .requestMatchers("/auth/**").authenticated()
-
-                                // Everything else requires authentication
-                                .anyRequest().authenticated()
-                );
-
-        return http.build();
-    }
 }
+

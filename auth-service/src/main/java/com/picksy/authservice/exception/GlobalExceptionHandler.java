@@ -30,5 +30,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(errors);
     }
 
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, String>> handleAllExceptions(Exception e) {
+        return ResponseEntity
+                .status(500)
+                .body(Collections.singletonMap("message", e.getMessage()));
+    }
+
+
 }
 

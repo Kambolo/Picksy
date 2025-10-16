@@ -8,12 +8,17 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.util.Date;
+import java.util.Map;
 
 @Component
 public class JwtUtil {
 
     @Value("${jwt.secret}")
     private String jwtSecret;
+
+    @Value("${jwt.expiration-ms:604800000}") // 7 dni
+    private long jwtExpirationMs;
 
     private SecretKey key;
 
@@ -22,13 +27,23 @@ public class JwtUtil {
         this.key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String getUsernameFromToken(String token) {
-        return Jwts.parserBuilder()
+    public Long getUserIdFromToken(String token) {
+        String subject = Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()
                 .parseClaimsJws(token)
                 .getBody()
                 .getSubject();
+        return Long.parseLong(subject);
+    }
+
+    public String getEmailFromToken(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .get("email", String.class);
     }
 
     public boolean validateJwtToken(String token) {
@@ -37,7 +52,7 @@ public class JwtUtil {
             return true;
         } catch (JwtException e) {
             System.out.println("JWT invalid: " + e.getMessage());
+            return false;
         }
-        return false;
     }
 }

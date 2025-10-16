@@ -11,6 +11,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
+import java.util.Optional;
+
 
 @Service
 @RequiredArgsConstructor
@@ -30,11 +33,34 @@ public class AccountService {
     public void changeAccDetails(UserChangeDetailsBody newUser){
         User oldUser = userRepository.findById(newUser.id()).orElseThrow(() -> new BadRequestException("User not found."));
         if(!newUser.username().isBlank()){
-            if(userRepository.existsByUsername(newUser.username())){
-                throw new BadRequestException("Username taken.");
+            if(!Objects.equals(oldUser.getUsername(), newUser.username()) && userRepository.existsByUsernameIgnoreCase(newUser.username())){
+                throw new BadRequestException("Nazwa użytkownika jest zajęta.");
             }
             oldUser.setUsername(newUser.username());
         }
+        if(!Objects.equals(oldUser.getEmail(), newUser.email()) && !newUser.email().isBlank()){
+            if(userRepository.existsByEmailIgnoreCase(newUser.email())){
+                throw new BadRequestException("Email jest zajęty.");
+            }
+            oldUser.setEmail(newUser.email());
+        }
+
         userRepository.save(oldUser);
+    }
+
+    public UserDTO loadUserByID(Long id) {
+        Optional<User> savedUser = userRepository.findById(id);
+        if (!savedUser.isPresent()) {
+            throw new RuntimeException("User not found");
+        }
+        return new UserDTO(savedUser.get().getId(), savedUser.get().getUsername(), savedUser.get().getEmail());
+    }
+
+    public UserDTO loadUserByEmail(String email) {
+        User savedUser = userRepository.findByEmailIgnoreCase(email);
+        if (savedUser == null) {
+            throw new RuntimeException("User not found");
+        }
+        return new UserDTO(savedUser.getId(), savedUser.getUsername(), savedUser.getEmail());
     }
 }

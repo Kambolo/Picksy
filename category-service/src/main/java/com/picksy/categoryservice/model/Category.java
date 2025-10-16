@@ -35,6 +35,8 @@ public class Category {
     @Column(name = "photo_url")
     private String photoUrl;
 
+    private String description;
+
     public void add(Option option){
         if(options == null) this.options = new ArrayList<>();
 
