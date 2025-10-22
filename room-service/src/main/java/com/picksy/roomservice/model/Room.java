@@ -47,23 +47,16 @@ public class Room {
     private Map<Long, String> participants;
 
     @Transient
-    private int anonymousCount;
-
-    @Transient
     private int currentCategoryIndex = 0;
 
     public Map.Entry<Long, String> addParticipant(Long id, String username){
         if(participants == null){
             participants = new HashMap<>();
-            anonymousCount = 0;
         }
-        anonymousCount++;
 
-        Long temp = id == null ? (long)-anonymousCount : id;
+        participants.put(id, username);
 
-        participants.put(temp, username);
-
-        return Map.entry(temp, username);
+        return Map.entry(id, username);
     }
 
     public void addCategoryId(Long id){

@@ -52,7 +52,7 @@ public class CategoryController {
             @Parameter(description = "Sort by field (default is 'id')") @RequestParam(defaultValue = "id") String sortBy,
             @Parameter(description = "Sort ascending? (default is true)") @RequestParam(defaultValue = "true") boolean ascending
     ) {
-        Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy);
+        Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
         Pageable pageable = PageRequest.of(page, size, sort);
         return ResponseEntity.status(HttpStatus.OK).body(categoryService.findAll(pageable));
     }
@@ -122,5 +122,11 @@ public class CategoryController {
     public ResponseEntity<String> updateCategory(@PathVariable Long catId, CategoryBody categoryBody) throws BadRequestException {
         categoryService.update(catId, categoryBody);
         return ResponseEntity.ok().body("Category updated.");
+    }
+
+    @PatchMapping("/public/{id}/increase")
+    public ResponseEntity<String> increaseCategory(@PathVariable Long id) throws BadRequestException {
+        categoryService.increaseViews(id);
+        return ResponseEntity.status(HttpStatus.OK).body("Category updated.");
     }
 }

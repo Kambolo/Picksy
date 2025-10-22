@@ -3,8 +3,8 @@ package com.picksy.categoryservice.service;
 import com.picksy.categoryservice.exception.FileUploadException;
 import com.picksy.categoryservice.model.Category;
 import com.picksy.categoryservice.model.Option;
-import com.picksy.categoryservice.repositoty.CategoryRepository;
-import com.picksy.categoryservice.repositoty.OptionRepository;
+import com.picksy.categoryservice.repository.CategoryRepository;
+import com.picksy.categoryservice.repository.OptionRepository;
 import com.picksy.categoryservice.request.OptionBody;
 import com.picksy.categoryservice.response.OptionDTO;
 import jakarta.transaction.Transactional;
@@ -46,6 +46,7 @@ public class OptionService {
 
         Option option = Option.builder()
                 .name(optionBody.name())
+                .photoUrl("https://res.cloudinary.com/dctiucda1/image/upload/v1760881210/image_oetxkk.png")
                 .build();
 
         category.add(option);

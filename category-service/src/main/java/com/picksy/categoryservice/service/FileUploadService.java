@@ -85,7 +85,7 @@ public class FileUploadService {
             throw new FileUploadException("Allowed file extensions: " + allowed);
         }
 
-        filename = filePrefix + id + ".jpg";
+        filename = filePrefix + id;
 
         Map options = ObjectUtils.asMap(
                 "public_id", filename,

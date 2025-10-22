@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,6 +37,10 @@ public class Category {
     private String photoUrl;
 
     private String description;
+
+    private int views;
+
+    private LocalDateTime created;
 
     public void add(Option option){
         if(options == null) this.options = new ArrayList<>();

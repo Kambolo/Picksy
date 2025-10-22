@@ -25,7 +25,9 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
             "/api/category/public",
             "/api/option/public",
             "/api/profile/public",
-            "/api/room/public"
+            "/api/room/public",
+            "/ws-room",
+            "/ws-poll"
     );
 
     @Override
@@ -51,17 +53,21 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
             return exchange.getResponse().setComplete();
         }
 
-        Long userId = jwtUtils.getUserIdFromToken(token);
-        String email = jwtUtils.getEmailFromToken(token);
+        if (!path.startsWith("/ws-room") && !path.startsWith("/ws-poll")) {
+            Long userId = jwtUtils.getUserIdFromToken(token);
+            String email = jwtUtils.getEmailFromToken(token);
 
-        ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
-                .header("X-User-Id", String.valueOf(userId))
-                .header("X-User-Email", email != null ? email : "")
-                .build();
+            ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
+                    .header("X-User-Id", String.valueOf(userId))
+                    .header("X-User-Email", email != null ? email : "")
+                    .build();
 
-        ServerWebExchange mutatedExchange = exchange.mutate().request(mutatedRequest).build();
+            exchange = exchange.mutate().request(mutatedRequest).build();
+        }
 
-        return chain.filter(mutatedExchange);
+        System.out.println(chain.filter(exchange));
+
+        return chain.filter(exchange);
     }
 
     private String parseJwt(ServerWebExchange exchange) {

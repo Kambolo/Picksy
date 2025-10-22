@@ -5,11 +5,15 @@ spring:
     name: api-gateway
   cloud:
     gateway:
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin, RETAIN_FIRST
+        - DedupeResponseHeader=Access-Control-Allow-Credentials, RETAIN_FIRST
+
       globalcors:
         corsConfigurations:
           '[/**]':
             allowedOriginPatterns:
-              - "*"
+              - "http://localhost:5173"
             allowedMethods:
               - GET
               - POST
@@ -40,27 +44,23 @@ spring:
           predicates:
             - Path=/api/category/**
 
+        - id: options-service
+          uri: lb://CATEGORY-SERVICE
+          predicates:
+            - Path=/api/option/**
+
         - id: room-service
           uri: lb://ROOM-SERVICE
           predicates:
             - Path=/api/room/**
 
-        - id: room-service-ws
-          uri: lb://ROOM-SERVICE
+        - id: room-ws
+          uri: lb:ws://ROOM-SERVICE
           predicates:
             - Path=/ws-room/**
-          filters:
-            - name: RewritePath
-              args:
-                regexp: /ws-room/(?<segment>.*)
-                replacement: /ws-room/${segment}
 
-        - id: decision-service-ws
-          uri: lb://DECISION-SERVICE
+        - id: decision-ws
+          uri: lb:ws://DECISION-SERVICE
           predicates:
             - Path=/ws-poll/**
-          filters:
-            - name: RewritePath
-              args:
-                regexp: /ws-room/(?<segment>.*)
-                replacement: /ws-room/${segment}
+

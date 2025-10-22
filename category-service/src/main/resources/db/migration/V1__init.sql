@@ -1,11 +1,14 @@
 CREATE TABLE IF NOT EXISTS category (
-    id SERIAL primary key,
-    name varchar(50) not null,
-    type varchar(50) not null,
-    author_id bigint default null,
-    photo_url varchar(250) default null,
-    description varchar(500) default null
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    author_id BIGINT DEFAULT NULL,
+    photo_url VARCHAR(250) DEFAULT NULL,
+    description VARCHAR(500) DEFAULT NULL,
+    views BIGINT DEFAULT 0,
+    created TIMESTAMPTZ DEFAULT NOW()
     );
+
 
 CREATE TABLE IF NOT EXISTS option(
      id SERIAL primary key,

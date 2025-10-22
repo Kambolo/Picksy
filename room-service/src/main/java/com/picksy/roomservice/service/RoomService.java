@@ -42,7 +42,8 @@ public class RoomService {
                 newRoom.getCategoryIds(),
                 newRoom.isVoting_started(),
                 newRoom.isRoom_closed(),
-               null);
+               null,
+                newRoom.getOwnerId());
     }
 
     @Transactional
@@ -119,13 +120,14 @@ public class RoomService {
     @Transactional
     public void joinRoom(String roomCode, RoomMessage roomMessage) throws BadRequestException {
         if(!roomRepository.existsByRoomCode(roomCode)) throw new BadRequestException("Room does not exist.");
-
+        System.out.println("Room code : " + roomCode);
         Room room = roomRepository.findByRoomCode(roomCode).get();
 
         if(room.isRoom_closed()) throw new BadRequestException("Room is closed.");
         if(room.isVoting_started()) throw new BadRequestException("Voting has already started.");
 
         Map.Entry<Long, String> newParticipant = room.addParticipant(roomMessage.getUserId(), roomMessage.getUsername());
+        System.out.println(roomMessage);
 
         messagingTemplate.convertAndSend("/topic/room/"+ roomCode,
                new RoomMessage(MessageType.JOIN, newParticipant.getKey(), newParticipant.getValue(), null));
@@ -139,7 +141,8 @@ public class RoomService {
                 room.get().getCategoryIds(),
                 room.get().isVoting_started(),
                 room.get().isRoom_closed(),
-                room.get().getParticipants());
+                room.get().getParticipants(),
+                room.get().getOwnerId());
     }
 
     private String generateUniqueRoomCode() {

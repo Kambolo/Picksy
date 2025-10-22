@@ -8,5 +8,6 @@ public record RoomDTO(String roomCode,
                       List<Long> categoryIds,
                       boolean voting_started,
                       boolean room_closed,
-                      Map<Long, String> participants) {
+                      Map<Long, String> participants,
+                      Long ownerId) {
 }

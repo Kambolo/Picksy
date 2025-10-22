@@ -44,18 +44,18 @@ public class RoomController {
         return ResponseEntity.ok().body("Room closed.");
     }
 
-    @PostMapping("/public/{roomCode}/details")
+    @GetMapping("/public/{roomCode}/details")
     public ResponseEntity<RoomDTO> getRoomDetails(@PathVariable String roomCode) throws BadRequestException {
         return ResponseEntity.ok().body(roomService.getRoomDetails(roomCode));
     }
 
-    @MessageMapping("/room/{roomCode}/join")
+    @MessageMapping("/public/room/{roomCode}/join")
     public RoomMessage joinRoom(@DestinationVariable String roomCode, @Payload RoomMessage roomMessage) throws BadRequestException {
         roomService.joinRoom(roomCode, roomMessage);
         return roomMessage;
     }
 
-    @MessageMapping("/room/{roomCode}/leave")
+    @MessageMapping("/public/room/{roomCode}/leave")
     public RoomMessage leaveRoom(@DestinationVariable String roomCode, @Payload RoomMessage roomMessage) throws BadRequestException {
         roomService.leaveRoom(roomCode, roomMessage);
         return roomMessage;
