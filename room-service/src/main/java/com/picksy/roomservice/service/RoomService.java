@@ -105,10 +105,13 @@ public class RoomService {
         if(room.isEmpty()) throw new BadRequestException("Room does not exist");
         if(!Objects.equals(room.get().getOwnerId(), ownerId)) throw new BadRequestException("You have to be room owner to change voting category.");
 
+        MessageType type = MessageType.NEXT_CATEGORY;
         int currentCategoryIndex = room.get().getCurrentCategoryIndex();
 
+        if(currentCategoryIndex == room.get().getCategoryIds().size()-1) type = MessageType.VOTING_FINISHED;
+
         messagingTemplate.convertAndSend("/topic/room/"+ roomCode,
-                new RoomMessage(MessageType.NEXT_CATEGORY,
+                new RoomMessage(type,
                         room.get().getOwnerId(),
                         null,
                         room.get().getCategoryIds().get(currentCategoryIndex)));

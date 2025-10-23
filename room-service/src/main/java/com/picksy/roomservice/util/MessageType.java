@@ -5,5 +5,6 @@ public enum MessageType {
     LEAVE,
     ROOM_CLOSED,
     VOTING_STARTED,
-    NEXT_CATEGORY
+    NEXT_CATEGORY,
+    VOTING_FINISHED,
 }
