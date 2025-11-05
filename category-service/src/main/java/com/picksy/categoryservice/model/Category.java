@@ -42,6 +42,8 @@ public class Category {
 
     private LocalDateTime created;
 
+    private Boolean isPublic;
+
     public void add(Option option){
         if(options == null) this.options = new ArrayList<>();
 

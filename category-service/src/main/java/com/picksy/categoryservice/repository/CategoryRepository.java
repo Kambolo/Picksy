@@ -12,6 +12,12 @@ import java.util.Optional;
 public interface CategoryRepository extends JpaRepository<Category, Long> {
     Optional<Category> findById(Long id);
     Page<Category> findAllByAuthorID(Long id, Pageable pageable);
-    Page<Category> findByNameContainingIgnoreCase(String pattern, Pageable pageable);
+    Page<Category> findAllByAuthorIDAndIsPublic(Long id, Boolean isPublic, Pageable pageable);
     Page<Category> findByAuthorIDIsNull(Pageable pageable);
+    Page<Category> findAllByIsPublic(boolean isPublic, Pageable pageable);
+    Page<Category> findAllByIsPublicAndNameContainingIgnoreCase(Boolean isPublic, String name, Pageable pageable);
+    Page<Category> findAllByAuthorIDAndNameContainingIgnoreCase(Long authorID, String name, Pageable pageable);
+    Page<Category> findAllByAuthorIDAndIsPublicAndNameContainingIgnoreCase(Long authorID, Boolean isPublic, String name, Pageable pageable);
 }
+
+

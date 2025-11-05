@@ -58,7 +58,7 @@ public class AuthService {
 
             String jwt = jwtUtils.generateToken(userDetails, savedUser.getId(), savedUser.getEmail());
 
-            long maxAge = user.rememberMe() ? 7 * 24 * 60 * 60 : -1;
+            long maxAge = user.rememberMe() ?  24 * 60 * 60 : -1;
 
             ResponseCookie cookie = ResponseCookie.from("jwt", jwt)
                     .httpOnly(true)

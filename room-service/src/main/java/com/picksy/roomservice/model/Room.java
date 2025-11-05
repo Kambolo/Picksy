@@ -23,18 +23,22 @@ public class Room {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true)
+    @Column(unique = true, name="room_code")
     private String roomCode;
 
     private String name;
 
+    @Column(name="category_id")
     @ElementCollection
     private List<Long> categoryIds;
 
-    private boolean voting_started;
+    @Column(name="voting_started")
+    private boolean votingStarted;
 
-    private boolean room_closed;
+    @Column(name="room_closed")
+    private boolean roomClosed;
 
+    @Column(name="owner_id")
     private Long ownerId;
 
     @ElementCollection
@@ -46,7 +50,7 @@ public class Room {
     @Column(name = "username")
     private Map<Long, String> participants;
 
-    @Transient
+    @Column(name="current_category_idx")
     private int currentCategoryIndex = 0;
 
     public Map.Entry<Long, String> addParticipant(Long id, String username){

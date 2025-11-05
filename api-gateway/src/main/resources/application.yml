@@ -5,13 +5,21 @@ spring:
     name: api-gateway
   cloud:
     gateway:
-      default-filters:
-        - DedupeResponseHeader=Access-Control-Allow-Origin, RETAIN_FIRST
-        - DedupeResponseHeader=Access-Control-Allow-Credentials, RETAIN_FIRST
-
       globalcors:
         corsConfigurations:
-          '[/**]':
+          '[/auth/**]':
+            allowedOriginPatterns:
+              - "http://localhost:5173"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - PATCH
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+          '[/api/**]':
             allowedOriginPatterns:
               - "http://localhost:5173"
             allowedMethods:
@@ -27,32 +35,26 @@ spring:
       discovery:
         locator:
           enabled: true  # pozwala automatycznie tworzyć trasy na podstawie Eureka
-          lowerCaseServiceId: true
       routes:
         - id: auth-service
           uri: lb://AUTH-SERVICE
           predicates:
-            - Path=/auth/**
+            - Path=/auth/**, /auth-service/v3/api-docs
 
         - id: user-service
           uri: lb://USER-SERVICE
           predicates:
-            - Path=/api/profile/**
+            - Path=/api/profile/**, /user-service/v3/api-docs
 
         - id: category-service
           uri: lb://CATEGORY-SERVICE
           predicates:
-            - Path=/api/category/**
-
-        - id: options-service
-          uri: lb://CATEGORY-SERVICE
-          predicates:
-            - Path=/api/option/**
+            - Path=/api/category/**, /api/option/**, /category-service/v3/api-docs, /category-service/swagger-ui/**
 
         - id: room-service
           uri: lb://ROOM-SERVICE
           predicates:
-            - Path=/api/room/**
+            - Path=/api/room/**, /room-service/v3/api-docs
 
         - id: room-ws
           uri: lb:ws://ROOM-SERVICE
@@ -64,3 +66,23 @@ spring:
           predicates:
             - Path=/ws-poll/**
 
+
+springdoc:
+  enable-native-support: true
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    config-url: /v3/api-docs/swagger-config
+    urls:
+      - url: /v3/api-docs
+        name: API Gateway Service
+      - url: /category-service/v3/api-docs
+        name: Category Service
+      - url: /user-service/v3/api-docs
+        name: User Service
+      - url: /room-service/v3/api-docs
+        name: Room Service
+      - url: /auth-service/v3/api-docs
+        name: Auth Service

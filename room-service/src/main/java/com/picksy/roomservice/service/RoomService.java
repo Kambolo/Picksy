@@ -30,8 +30,8 @@ public class RoomService {
                 .roomCode(generateUniqueRoomCode())
                 .ownerId(request.ownerId())
                 .categoryIds(request.categoryIds())
-                .voting_started(false)
-                .room_closed(false)
+                .votingStarted(false)
+                .roomClosed(false)
                 .build();
 
         roomRepository.save(newRoom);
@@ -40,8 +40,8 @@ public class RoomService {
                 newRoom.getRoomCode(),
                 newRoom.getName(),
                 newRoom.getCategoryIds(),
-                newRoom.isVoting_started(),
-                newRoom.isRoom_closed(),
+                newRoom.isVotingStarted(),
+                newRoom.isRoomClosed(),
                null,
                 newRoom.getOwnerId());
     }
@@ -57,7 +57,7 @@ public class RoomService {
     public void markRoomAsClosed(String roomCode)throws BadRequestException {
         Optional<Room> room = roomRepository.findByRoomCode(roomCode);
         if(room.isEmpty()) throw new BadRequestException("Room does not exist");
-        room.get().setRoom_closed(true);
+        room.get().setRoomClosed(true);
         roomRepository.save(room.get());
     }
 
@@ -69,7 +69,7 @@ public class RoomService {
 
         if(!Objects.equals(room.get().getOwnerId(), ownerId)) throw new BadRequestException("You have to be room owner to close the room.");
 
-        room.get().setRoom_closed(true);
+        room.get().setRoomClosed(true);
 
         roomRepository.save(room.get());
 
@@ -84,7 +84,7 @@ public class RoomService {
         if(room.isEmpty()) throw new BadRequestException("Room does not exist");
         if(!Objects.equals(room.get().getOwnerId(), ownerId)) throw new BadRequestException("You have to be room owner to start voting.");
 
-        room.get().setVoting_started(true);
+        room.get().setVotingStarted(true);
 
         int currentCategoryIndex = room.get().getCurrentCategoryIndex();
 
@@ -94,8 +94,9 @@ public class RoomService {
                         null,
                                 room.get().getCategoryIds().get(currentCategoryIndex)));
 
-        room.get().setCurrentCategoryIndex(currentCategoryIndex + 1);
+        room.get().setCurrentCategoryIndex(currentCategoryIndex);
         roomRepository.save(room.get());
+
     }
 
     @Transactional
@@ -106,18 +107,26 @@ public class RoomService {
         if(!Objects.equals(room.get().getOwnerId(), ownerId)) throw new BadRequestException("You have to be room owner to change voting category.");
 
         MessageType type = MessageType.NEXT_CATEGORY;
-        int currentCategoryIndex = room.get().getCurrentCategoryIndex();
+        int currentCategoryIndex = room.get().getCurrentCategoryIndex() + 1;
 
-        if(currentCategoryIndex == room.get().getCategoryIds().size()-1) type = MessageType.VOTING_FINISHED;
+        Long categoryId = room.get().getCategoryIds().get(room.get().getCategoryIds().size()-1);
+
+        if(currentCategoryIndex >= room.get().getCategoryIds().size()){
+            type = MessageType.VOTING_FINISHED;
+        }else{
+            categoryId= room.get().getCategoryIds().get(currentCategoryIndex);
+        }
+
 
         messagingTemplate.convertAndSend("/topic/room/"+ roomCode,
                 new RoomMessage(type,
                         room.get().getOwnerId(),
                         null,
-                        room.get().getCategoryIds().get(currentCategoryIndex)));
+                        categoryId));
 
-        room.get().setCurrentCategoryIndex(currentCategoryIndex + 1);
+        room.get().setCurrentCategoryIndex(currentCategoryIndex);
         roomRepository.save(room.get());
+        System.out.println(currentCategoryIndex);
     }
 
     @Transactional
@@ -126,8 +135,8 @@ public class RoomService {
         System.out.println("Room code : " + roomCode);
         Room room = roomRepository.findByRoomCode(roomCode).get();
 
-        if(room.isRoom_closed()) throw new BadRequestException("Room is closed.");
-        if(room.isVoting_started()) throw new BadRequestException("Voting has already started.");
+        if(room.isRoomClosed()) throw new BadRequestException("Room is closed.");
+        if(room.isVotingStarted()) throw new BadRequestException("Voting has already started.");
 
         Map.Entry<Long, String> newParticipant = room.addParticipant(roomMessage.getUserId(), roomMessage.getUsername());
         System.out.println(roomMessage);
@@ -142,8 +151,8 @@ public class RoomService {
         return new RoomDTO(room.get().getRoomCode(),
                 room.get().getName(),
                 room.get().getCategoryIds(),
-                room.get().isVoting_started(),
-                room.get().isRoom_closed(),
+                room.get().isVotingStarted(),
+                room.get().isRoomClosed(),
                 room.get().getParticipants(),
                 room.get().getOwnerId());
     }
@@ -176,5 +185,20 @@ public class RoomService {
         messagingTemplate.convertAndSend("/topic/room/"+ roomCode,
                 new RoomMessage(MessageType.LEAVE, roomMessage.getUserId(), null, null));
 
+    }
+
+    @Transactional
+    public void endVoting(String roomCode, Long ownerId) throws BadRequestException {
+        Optional<Room> room = roomRepository.findByRoomCode(roomCode);
+
+        if(room.isEmpty()) throw new BadRequestException("Room does not exist");
+        if(!Objects.equals(room.get().getOwnerId(), ownerId)) throw new BadRequestException("You have to be room owner to change voting category.");
+
+
+        if(room.get().isRoomClosed()) throw new BadRequestException("Room is closed.");
+        if(!room.get().isVotingStarted()) throw new BadRequestException("Voting hasn't started.");
+
+        messagingTemplate.convertAndSend("/topic/room/"+ roomCode,
+                new RoomMessage(MessageType.VOTING_FINISHED, null, null, null));
     }
 }

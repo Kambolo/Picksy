@@ -41,8 +41,10 @@ public class OptionService {
     }
 
     @Transactional
-    public void add(OptionBody optionBody) throws BadRequestException {
+    public OptionDTO add(OptionBody optionBody) throws BadRequestException {
         Category category = categoryService.findById(optionBody.categoryId());
+
+        if(category == null) {throw new BadRequestException("Category not found");}
 
         Option option = Option.builder()
                 .name(optionBody.name())
@@ -50,7 +52,12 @@ public class OptionService {
                 .build();
 
         category.add(option);
+        optionRepository.save(option);
+
         categoryRepository.save(category);
+
+
+        return new OptionDTO(option.getId(), option.getName(), option.getPhotoUrl());
     }
 
     @Transactional
@@ -95,5 +102,7 @@ public class OptionService {
         } catch (Exception e) {
             throw new BadRequestException("Option update fail.");
         }
+
+        optionRepository.save(option);
     }
 }

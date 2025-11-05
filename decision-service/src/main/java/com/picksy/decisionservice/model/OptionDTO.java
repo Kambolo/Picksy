@@ -7,8 +7,8 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class OptionDto {
+public class OptionDTO {
     private Long id;
     private String name;
-    private String photoUrl;
+    private String photoURL;
 }

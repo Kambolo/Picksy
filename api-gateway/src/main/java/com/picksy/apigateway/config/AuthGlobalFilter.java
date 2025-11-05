@@ -1,6 +1,5 @@
 package com.picksy.apigateway.config;
 
-
 import com.picksy.apigateway.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -27,45 +26,59 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
             "/api/profile/public",
             "/api/room/public",
             "/ws-room",
-            "/ws-poll"
+            "/ws-poll",
+            "/auth-service",
+            "/category-service",
+            "/room-service",
+            "/user-service"
     );
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         String path = exchange.getRequest().getURI().getPath();
 
-        System.out.println("AuthGlobalFilter - Cookies: " + exchange.getRequest().getCookies());
+        System.out.println("=== AuthGlobalFilter ===");
+        System.out.println("Path: " + path);
 
+        // Check if path is public
+        boolean isPublic = false;
         for (String publicPath : publicPaths) {
             if (path.startsWith(publicPath)) {
-                if(path.startsWith("/auth/account/secure/me")) continue;
-                System.out.println("AuthGlobalFilter - Public endpoint: " + path);
-                return chain.filter(exchange);
+                isPublic = true;
+                break;
             }
         }
 
+        // Special case: /auth/account/secure/me is NOT public
+        if (path.startsWith("/auth/account/secure/me")) {
+            isPublic = false;
+        }
+
+        if (isPublic) {
+            System.out.println("Public endpoint - allowing access");
+            return chain.filter(exchange);
+        }
+
+        // Not public - require authentication
         String token = parseJwt(exchange);
-        System.out.println("AuthGlobalFilter - Token: " + token);
 
         if (token == null || !jwtUtils.validateJwtToken(token)) {
-            System.out.println("AuthGlobalFilter - Unauthorized request to " + path);
+            System.out.println("Unauthorized request to " + path);
             exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
             return exchange.getResponse().setComplete();
         }
 
-        if (!path.startsWith("/ws-room") && !path.startsWith("/ws-poll")) {
-            Long userId = jwtUtils.getUserIdFromToken(token);
-            String email = jwtUtils.getEmailFromToken(token);
+        // Add user headers for non-WebSocket paths
+        Long userId = jwtUtils.getUserIdFromToken(token);
+        String email = jwtUtils.getEmailFromToken(token);
 
-            ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
-                    .header("X-User-Id", String.valueOf(userId))
-                    .header("X-User-Email", email != null ? email : "")
-                    .build();
+        ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
+                .header("X-User-Id", String.valueOf(userId))
+                .header("X-User-Email", email != null ? email : "")
+                .build();
 
-            exchange = exchange.mutate().request(mutatedRequest).build();
-        }
+        exchange = exchange.mutate().request(mutatedRequest).build();
 
-        System.out.println(chain.filter(exchange));
 
         return chain.filter(exchange);
     }

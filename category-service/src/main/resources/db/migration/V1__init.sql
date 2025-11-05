@@ -6,7 +6,8 @@ CREATE TABLE IF NOT EXISTS category (
     photo_url VARCHAR(250) DEFAULT NULL,
     description VARCHAR(500) DEFAULT NULL,
     views BIGINT DEFAULT 0,
-    created TIMESTAMPTZ DEFAULT NOW()
+    created TIMESTAMPTZ DEFAULT NOW(),
+    is_public BOOLEAN DEFAULT True
     );
 
 

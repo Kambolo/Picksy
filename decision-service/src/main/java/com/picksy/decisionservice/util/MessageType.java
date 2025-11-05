@@ -4,5 +4,10 @@ public enum MessageType {
     SETUP,
     START,
     END,
-    VOTE
+    VOTE,
+    UPDATE_PARTICIPANT_COUNT,
+    MATCH,
+    OPTIONS_ENDED,
+    INCREASE_VOTE_COUNT,
+    RESULTS
 }

@@ -1,8 +1,8 @@
 -- Insert initial data into category
-INSERT INTO category (name, type, photo_url) VALUES
-  ('Electronics', 'SWIPE', 'https://res.cloudinary.com/dctiucda1/image/upload/v1760618779/image_a9gqss.png'),
-  ('Books', 'SWIPE', 'https://res.cloudinary.com/dctiucda1/image/upload/v1760618779/image_a9gqss.png'),
-  ('Clothing', 'SWIPE', 'https://res.cloudinary.com/dctiucda1/image/upload/v1760618779/image_a9gqss.png');
+INSERT INTO category (name, type, photo_url, is_public) VALUES
+  ('Electronics', 'SWIPE', 'https://res.cloudinary.com/dctiucda1/image/upload/v1760618779/image_a9gqss.png', true),
+  ('Books', 'SWIPE', 'https://res.cloudinary.com/dctiucda1/image/upload/v1760618779/image_a9gqss.png', true),
+  ('Clothing', 'SWIPE', 'https://res.cloudinary.com/dctiucda1/image/upload/v1760618779/image_a9gqss.png', true);
 
 -- Insert initial data into option
 INSERT INTO option (cat_id, name) VALUES

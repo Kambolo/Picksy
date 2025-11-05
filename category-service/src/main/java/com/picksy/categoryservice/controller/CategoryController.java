@@ -4,6 +4,7 @@ import com.picksy.categoryservice.exception.FileUploadException;
 import com.picksy.categoryservice.request.CategoryBody;
 import com.picksy.categoryservice.response.CategoryDTO;
 import com.picksy.categoryservice.service.CategoryService;
+import com.picksy.categoryservice.util.enums.Type;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +21,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.net.MalformedURLException;
 
-
 @RestController
 @RequestMapping("/api/category")
 @RequiredArgsConstructor
@@ -28,14 +28,22 @@ public class CategoryController {
 
     private final CategoryService categoryService;
 
-    @Operation(summary = "Create a new category", description = "Creates a new category using the provided request body.")
+    @Operation(
+            summary = "Create a new category",
+            description = "Creates a new category with the provided data."
+    )
     @PostMapping("/secure")
-    public ResponseEntity<CategoryDTO> createCategory(@RequestBody CategoryBody catBody) throws BadRequestException {
+    public ResponseEntity<CategoryDTO> createCategory(
+            @Parameter(description = "Category data to create") @RequestBody CategoryBody catBody
+    ) throws BadRequestException {
         return ResponseEntity.status(HttpStatus.CREATED).body(categoryService.create(catBody));
     }
 
-    @Operation(summary = "Upload an image for a category", description = "Adds an image to an existing category by category ID.")
-    @PostMapping(value = "/secure/image/{catId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(
+            summary = "Upload an image for a category",
+            description = "Adds an image to an existing category by category ID."
+    )
+    @PatchMapping(value = "/secure/image/{catId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> addCategoryImage(
             @Parameter(description = "Image file to upload") @RequestParam MultipartFile image,
             @Parameter(description = "ID of the category to attach the image to") @PathVariable Long catId
@@ -44,89 +52,195 @@ public class CategoryController {
         return ResponseEntity.status(HttpStatus.CREATED).body("Category image added.");
     }
 
-    @Operation(summary = "Get all categories with pagination", description = "Fetches all categories with optional pagination, sorting, and ordering.")
+    @Operation(
+            summary = "Get all public categories",
+            description = "Fetches all public categories with optional pagination and sorting."
+    )
     @GetMapping("/public")
-    public ResponseEntity<Page<CategoryDTO>> getAllCategories(
-            @Parameter(description = "Page number (default is 0)") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Page size (default is 5)") @RequestParam(defaultValue = "5") int size,
-            @Parameter(description = "Sort by field (default is 'id')") @RequestParam(defaultValue = "id") String sortBy,
-            @Parameter(description = "Sort ascending? (default is true)") @RequestParam(defaultValue = "true") boolean ascending
+    public ResponseEntity<Page<CategoryDTO>> getAllPublicCategories(
+            @Parameter(description = "Page number, default is 0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size, default is 5") @RequestParam(defaultValue = "5") int size,
+            @Parameter(description = "Field to sort by, default is 'id'") @RequestParam(defaultValue = "id") String sortBy,
+            @Parameter(description = "Sort ascending, default is true") @RequestParam(defaultValue = "true") boolean ascending
     ) {
         Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
         Pageable pageable = PageRequest.of(page, size, sort);
-        return ResponseEntity.status(HttpStatus.OK).body(categoryService.findAll(pageable));
+        return ResponseEntity.ok(categoryService.findAllPublic(pageable));
     }
 
-    @Operation(summary = "Get a categories for author with pagination", description = "Fetches all categories for author with optional pagination, sorting, and ordering.")
-    @GetMapping("/public/{authorId}")
+    @Operation(
+            summary = "Get all categories for an author",
+            description = "Fetches categories created by a specific author with optional pagination and sorting."
+    )
+    @GetMapping("/secure/author/{authorId}")
     public Page<CategoryDTO> getAllCategoriesForAuthor(
-            @Parameter(description = "User ID") @PathVariable("authorId") Long authorId,
-            @Parameter(description = "Page number (default is 0)") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Page size (default is 5)") @RequestParam(defaultValue = "5") int size,
-            @Parameter(description = "Sort by field (default is 'id')") @RequestParam(defaultValue = "id") String sortBy,
-            @Parameter(description = "Sort ascending? (default is true)") @RequestParam(defaultValue = "true") boolean ascending
+            @RequestHeader("X-User-Id") Long userId,
+            @Parameter(description = "Author's user ID") @PathVariable Long authorId,
+            @Parameter(description = "Page number, default is 0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size, default is 5") @RequestParam(defaultValue = "5") int size,
+            @Parameter(description = "Field to sort by, default is 'id'") @RequestParam(defaultValue = "id") String sortBy,
+            @Parameter(description = "Sort ascending, default is true") @RequestParam(defaultValue = "true") boolean ascending
     ) throws BadRequestException {
-        Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy);
+        Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
         Pageable pageable = PageRequest.of(page, size, sort);
-        return categoryService.findAllByAuthorID(pageable, authorId);
+        return categoryService.findAllByAuthorID(userId, pageable, authorId, false);
     }
 
-    @Operation(summary = "Get built in categories with pagination", description = "Fetches all built in categories with optional pagination, sorting, and ordering.")
+    @Operation(
+            summary = "Get all public categories for an author",
+            description = "Fetches public categories created by a specific author with optional pagination and sorting."
+    )
+    @GetMapping("/public/author/{authorId}")
+    public Page<CategoryDTO> getAllPublicCategoriesForAuthor(
+            @Parameter(description = "Author's user ID") @PathVariable Long authorId,
+            @Parameter(description = "Page number, default is 0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size, default is 5") @RequestParam(defaultValue = "5") int size,
+            @Parameter(description = "Field to sort by, default is 'id'") @RequestParam(defaultValue = "id") String sortBy,
+            @Parameter(description = "Sort ascending, default is true") @RequestParam(defaultValue = "true") boolean ascending
+    ) throws BadRequestException {
+        Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        return categoryService.findAllByAuthorID(authorId, pageable, authorId, true);
+    }
+
+    @Operation(
+            summary = "Get built-in categories",
+            description = "Fetches all built-in categories with optional pagination and sorting."
+    )
     @GetMapping("/public/builtIn")
     public Page<CategoryDTO> getBuiltInCategories(
-            @Parameter(description = "Page number (default is 0)") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Page size (default is 5)") @RequestParam(defaultValue = "5") int size,
-            @Parameter(description = "Sort ascending? (default is true)") @RequestParam(defaultValue = "true") boolean ascending
-    ){
-        Pageable pageable = PageRequest.of(page, size);
+            @Parameter(description = "Page number, default is 0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size, default is 5") @RequestParam(defaultValue = "5") int size,
+            @Parameter(description = "Field to sort by, default is 'id'") @RequestParam(defaultValue = "id") String sortBy,
+            @Parameter(description = "Sort ascending, default is true") @RequestParam(defaultValue = "true") boolean ascending
+    ) {
+        Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(page, size, sort);
         return categoryService.findBuiltInCategories(pageable);
     }
 
-    @Operation(summary = "Get categories containing given pattern with pagination", description = "Fetches all categories based on given pattern with optional pagination, sorting, and ordering.")
+    @Operation(
+            summary = "Search public categories by pattern",
+            description = "Fetches public categories matching a given pattern with optional pagination and sorting."
+    )
     @GetMapping("/public/search")
-    public Page<CategoryDTO> getCategoriesByPattern(
-            @Parameter(description = "Pattern") @RequestParam String pattern,
-            @Parameter(description = "Page number (default is 0)") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Page size (default is 5)") @RequestParam(defaultValue = "5") int size,
-            @Parameter(description = "Sort by field (default is 'id')") @RequestParam(defaultValue = "id") String sortBy,
-            @Parameter(description = "Sort ascending? (default is true)") @RequestParam(defaultValue = "true") boolean ascending
-    ){
-        Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy);
+    public Page<CategoryDTO> getPublicCategoriesByPattern(
+            @Parameter(description = "Search pattern") @RequestParam String pattern,
+            @Parameter(description = "Page number, default is 0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size, default is 5") @RequestParam(defaultValue = "5") int size,
+            @Parameter(description = "Field to sort by, default is 'id'") @RequestParam(defaultValue = "id") String sortBy,
+            @Parameter(description = "Sort ascending, default is true") @RequestParam(defaultValue = "true") boolean ascending
+    ) {
+        Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
         Pageable pageable = PageRequest.of(page, size, sort);
-        return categoryService.findCategoriesByPattern(pattern, pageable);
+        return categoryService.findPublicCategoriesByPattern(pattern, pageable);
     }
 
-    @Operation(summary = "Delete a category", description = "Removes a category and its associated image by category ID.")
+    @Operation(
+            summary = "Search user categories by pattern",
+            description = "Fetches categories created by a user that match a given pattern, with optional pagination and sorting."
+    )
+    @GetMapping("/secure/search/author/{authorId}")
+    public Page<CategoryDTO> getUserCategoriesByPattern(
+            @RequestHeader("X-User-Id") Long userId,
+            @Parameter(description = "User ID") @PathVariable Long authorId,
+            @Parameter(description = "Search pattern") @RequestParam String pattern,
+            @Parameter(description = "Page number, default is 0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size, default is 5") @RequestParam(defaultValue = "5") int size,
+            @Parameter(description = "Field to sort by, default is 'id'") @RequestParam(defaultValue = "id") String sortBy,
+            @Parameter(description = "Sort ascending, default is true") @RequestParam(defaultValue = "true") boolean ascending
+    ) throws BadRequestException {
+        Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        return categoryService.findUserCategoriesByPattern(userId, authorId, pattern, pageable, false);
+    }
+
+    @Operation(
+            summary = "Search public user categories by pattern",
+            description = "Fetches public categories created by a user that match a given pattern, with optional pagination and sorting."
+    )
+    @GetMapping("/public/search/author/{authorId}")
+    public Page<CategoryDTO> getPublicUserCategoriesByPattern(
+            @Parameter(description = "User ID") @PathVariable Long authorId,
+            @Parameter(description = "Search pattern") @RequestParam String pattern,
+            @Parameter(description = "Page number, default is 0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size, default is 5") @RequestParam(defaultValue = "5") int size,
+            @Parameter(description = "Field to sort by, default is 'id'") @RequestParam(defaultValue = "id") String sortBy,
+            @Parameter(description = "Sort ascending, default is true") @RequestParam(defaultValue = "true") boolean ascending
+    ) throws BadRequestException {
+        Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        return categoryService.findUserCategoriesByPattern(authorId, authorId, pattern, pageable, true);
+    }
+
+    @Operation(
+            summary = "Delete a category",
+            description = "Removes a category and its associated image by ID."
+    )
     @DeleteMapping("/secure/{catId}")
     public ResponseEntity<String> deleteCategory(
             @Parameter(description = "ID of the category to delete") @PathVariable Long catId
     ) throws BadRequestException, FileUploadException, MalformedURLException {
         categoryService.remove(catId);
-        return ResponseEntity.status(HttpStatus.OK).body("Category removed.");
+        return ResponseEntity.ok("Category removed.");
     }
 
-    @Operation(summary = "Delete a category image", description = "Removes a category image by category ID.")
+    @Operation(
+            summary = "Delete a category image",
+            description = "Removes the image associated with a category by ID."
+    )
     @DeleteMapping("/secure/image/{catId}")
     public ResponseEntity<String> deleteCategoryImage(
-            @Parameter(description = "ID of the category ") @PathVariable Long catId
+            @Parameter(description = "ID of the category") @PathVariable Long catId
     ) throws BadRequestException, FileUploadException, MalformedURLException {
         categoryService.removeImg(catId);
-        return ResponseEntity.status(HttpStatus.OK).body("Category image removed.");
+        return ResponseEntity.ok("Category image removed.");
     }
 
-    @PatchMapping("/secure/{catId}")
     @Operation(
-            summary = "Update category info",
-            description = "Updates the category associated with the given category ID."
+            summary = "Update category information",
+            description = "Updates the details of an existing category by ID."
     )
-    public ResponseEntity<String> updateCategory(@PathVariable Long catId, CategoryBody categoryBody) throws BadRequestException {
-        categoryService.update(catId, categoryBody);
-        return ResponseEntity.ok().body("Category updated.");
+    @PatchMapping("/secure/{catId}")
+    public ResponseEntity<String> updateCategory(
+            @Parameter(description = "ID of the category") @PathVariable Long catId,
+            @Parameter(description = "Updated category data") @RequestBody CategoryBody categoryBody
+    ) throws BadRequestException {
+        categoryService.updateCategory(catId, categoryBody);
+        return ResponseEntity.ok("Category updated.");
     }
 
+    @Operation(
+            summary = "Increase category view count",
+            description = "Increments the number of views for a category by ID."
+    )
     @PatchMapping("/public/{id}/increase")
-    public ResponseEntity<String> increaseCategory(@PathVariable Long id) throws BadRequestException {
+    public ResponseEntity<String> increaseCategory(
+            @Parameter(description = "ID of the category") @PathVariable Long id
+    ) throws BadRequestException {
         categoryService.increaseViews(id);
-        return ResponseEntity.status(HttpStatus.OK).body("Category updated.");
+        return ResponseEntity.ok("Category view count increased.");
+    }
+
+    @Operation(
+            summary = "Get category details",
+            description = "Fetches the detailed information of a category by ID."
+    )
+    @GetMapping("/public/{id}/details")
+    public ResponseEntity<CategoryDTO> getCategory(
+            @Parameter(description = "ID of the category") @PathVariable Long id
+    ) throws BadRequestException {
+        return ResponseEntity.ok(categoryService.findDTOById(id));
+    }
+
+    @Operation(
+            summary = "Get category type",
+            description = "Fetches the type of a category by ID."
+    )
+    @GetMapping("/public/{id}/type")
+    public ResponseEntity<Type> getType(
+            @Parameter(description = "ID of the category") @PathVariable Long id
+    ) throws BadRequestException {
+        return ResponseEntity.ok(categoryService.findTypeById(id));
     }
 }

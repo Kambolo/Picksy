@@ -13,7 +13,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws-room")
-                .setAllowedOriginPatterns("http://localhost:5173") // frontend origin
+                .setAllowedOriginPatterns("http://localhost:5173")
                 .withSockJS();
     }
 

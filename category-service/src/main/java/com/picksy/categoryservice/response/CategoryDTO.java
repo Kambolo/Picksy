@@ -12,5 +12,6 @@ public record CategoryDTO(
         String photoURL,
         String description,
         int views,
-        LocalDateTime created) {
+        LocalDateTime created,
+        Boolean isPublic) {
 }

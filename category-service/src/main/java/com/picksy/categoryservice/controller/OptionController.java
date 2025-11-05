@@ -24,21 +24,33 @@ public class OptionController {
 
     private final OptionService optionService;
 
-    @Operation(summary = "Finds all options for category", description = "Fetch all options for specific category.")
+    @Operation(
+            summary = "Get all options for a category",
+            description = "Fetches all options associated with a specific category."
+    )
     @GetMapping("/public/{catId}")
-    public ResponseEntity<List<OptionDTO>> findAllForCategory(@PathVariable Long catId) throws BadRequestException {
-        return ResponseEntity.status(HttpStatus.OK).body(optionService.findAllForCategory(catId));
+    public ResponseEntity<List<OptionDTO>> findAllForCategory(
+            @Parameter(description = "ID of the category") @PathVariable Long catId
+    ) throws BadRequestException {
+        return ResponseEntity.ok(optionService.findAllForCategory(catId));
     }
 
-    @Operation(summary = "Add a new option", description = "Creates a new option and assigns it to a category.")
-    @PostMapping
-    public ResponseEntity<String> addOption(@RequestBody OptionBody optionBody) throws BadRequestException {
-        optionService.add(optionBody);
-        return ResponseEntity.status(HttpStatus.CREATED).body("Option added.");
+    @Operation(
+            summary = "Add a new option",
+            description = "Creates a new option and assigns it to a category."
+    )
+    @PostMapping("/secure")
+    public ResponseEntity<OptionDTO> addOption(
+            @Parameter(description = "Data for the new option") @RequestBody OptionBody optionBody
+    ) throws BadRequestException {
+        return ResponseEntity.status(HttpStatus.CREATED).body(optionService.add(optionBody));
     }
 
-    @Operation(summary = "Upload an image for an option", description = "Adds an image to an existing option by option ID.")
-    @PostMapping(value = "/image/{optId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(
+            summary = "Upload an image for an option",
+            description = "Adds an image file to an existing option by option ID."
+    )
+    @PatchMapping(value = "/secure/image/{optId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> addOptionImage(
             @Parameter(description = "Image file to upload") @RequestParam MultipartFile image,
             @Parameter(description = "ID of the option to attach the image to") @PathVariable Long optId
@@ -47,31 +59,40 @@ public class OptionController {
         return ResponseEntity.status(HttpStatus.CREATED).body("Option image added.");
     }
 
-    @Operation(summary = "Delete an option", description = "Removes an option and its associated image by option ID.")
-    @DeleteMapping("{optionId}")
+    @Operation(
+            summary = "Delete an option",
+            description = "Removes an option and its associated image by option ID."
+    )
+    @DeleteMapping("/secure/{optionId}")
     public ResponseEntity<String> deleteOption(
-            @Parameter(description = "ID of the option to delete") @PathVariable("optionId") Long optionId
+            @Parameter(description = "ID of the option to delete") @PathVariable Long optionId
     ) throws BadRequestException, FileUploadException, MalformedURLException {
         optionService.remove(optionId);
-        return ResponseEntity.status(HttpStatus.OK).body("Option removed.");
+        return ResponseEntity.ok("Option removed.");
     }
 
-    @Operation(summary = "Delete an option image", description = "Removes an option image by option ID.")
-    @DeleteMapping("/image/{optionId}")
+    @Operation(
+            summary = "Delete an option image",
+            description = "Removes the image associated with an option by option ID."
+    )
+    @DeleteMapping("/secure/image/{optionId}")
     public ResponseEntity<String> deleteOptionImage(
-            @Parameter(description = "ID of the option") @PathVariable("optionId") Long optionId
+            @Parameter(description = "ID of the option") @PathVariable Long optionId
     ) throws BadRequestException, FileUploadException, MalformedURLException {
         optionService.removeImg(optionId);
-        return ResponseEntity.status(HttpStatus.OK).body("Option image removed.");
+        return ResponseEntity.ok("Option image removed.");
     }
 
-    @PatchMapping("{optId}")
     @Operation(
-            summary = "Update option info",
-            description = "Updates the option associated with the given option ID."
+            summary = "Update option information",
+            description = "Updates the name of an existing option by option ID."
     )
-    public ResponseEntity<String> updateOption(@PathVariable Long optId, String name) throws BadRequestException {
+    @PatchMapping("/secure/{optId}")
+    public ResponseEntity<String> updateOption(
+            @Parameter(description = "ID of the option") @PathVariable Long optId,
+            @Parameter(description = "New name for the option") @RequestBody String name
+    ) throws BadRequestException {
         optionService.update(optId, name);
-        return ResponseEntity.ok().body("Option updated.");
+        return ResponseEntity.ok("Option updated.");
     }
 }
