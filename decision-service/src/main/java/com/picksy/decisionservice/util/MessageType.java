@@ -8,6 +8,6 @@ public enum MessageType {
     UPDATE_PARTICIPANT_COUNT,
     MATCH,
     OPTIONS_ENDED,
-    INCREASE_VOTE_COUNT,
+    INCREASE_VOTED_COUNT,
     RESULTS
 }

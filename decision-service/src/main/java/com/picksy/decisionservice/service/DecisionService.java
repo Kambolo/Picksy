@@ -47,6 +47,13 @@ public class DecisionService {
         updateParticipantsCount(roomCode, catId, pollMessage);
         break;
 
+      case MessageType.INCREASE_VOTED_COUNT:
+        increaseVotedCount(roomCode, catId, pollMessage);
+        break;
+
+      case MessageType.RESULTS:
+        getResults(roomCode, catId);
+        break;
     }
   }
 
@@ -81,8 +88,6 @@ public class DecisionService {
                     Choice.builder().optionId(optionDto.getId()).count(0).poll(null).build())
             .collectList()
             .block();
-
-    System.out.println("LOADED CHOICES: " + choices);
 
     CategoryType type = categoryClient.getCategoryType(catId).block();
 
@@ -177,7 +182,7 @@ public class DecisionService {
   }
 
   @Transactional
-  protected void increaseVoteCount(String roomCode, Long catId, PollMessage pollMessage) {
+  protected void increaseVotedCount(String roomCode, Long catId, PollMessage pollMessage) {
     Poll poll =
         pollRepository
             .findByRoomCodeAndCategoryId(roomCode, catId)
@@ -191,10 +196,11 @@ public class DecisionService {
 
     messagingTemplate.convertAndSend(
         "/topic/poll/" + roomCode + "/" + catId,
-        new PollMessage(votedCount, MessageType.INCREASE_VOTE_COUNT, pollMessage.getParticipantsCount()));
+        new PollMessage(
+            votedCount, MessageType.INCREASE_VOTED_COUNT, pollMessage.getParticipantsCount()));
   }
 
-  protected void getResults(String roomCode) {
+  protected void getResults(String roomCode, Long catId) {
     List<Poll> polls = pollRepository.findAllWithChoicesByRoomCode(roomCode);
 
     if (polls.isEmpty()) {
@@ -205,16 +211,15 @@ public class DecisionService {
     List<PollDTO> pollDTOS = new ArrayList<>();
 
     for (Poll poll : polls) {
-        for(Choice choice : poll.getChoices()) {
-            choiceDTOS.add(new ChoiceDTO(choice.getOptionId(), choice.getCount()));
-        }
-        pollDTOS.add(new PollDTO(poll.getId(), poll.getCategoryId(), choiceDTOS));
+      for (Choice choice : poll.getChoices()) {
+        choiceDTOS.add(new ChoiceDTO(choice.getOptionId(), choice.getCount()));
+      }
+      pollDTOS.add(new PollDTO(poll.getId(), poll.getCategoryId(), choiceDTOS));
     }
 
-      messagingTemplate.convertAndSend(
-              "/topic/poll/results/" + roomCode,
-              new PollResultsMessage(MessageType.RESULTS, pollDTOS)
-      );
+    System.out.println(choiceDTOS);
 
+    messagingTemplate.convertAndSend(
+            "/topic/poll/" + roomCode + "/" + catId, new PollResultsMessage(MessageType.RESULTS, pollDTOS));
   }
 }
