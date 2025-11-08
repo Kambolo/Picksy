@@ -1,6 +1,7 @@
 package com.picksy.roomservice.controller;
 
 
+import com.picksy.roomservice.model.PollDTO;
 import com.picksy.roomservice.request.RoomActionRequest;
 import com.picksy.roomservice.request.RoomCreateRequest;
 import com.picksy.roomservice.response.RoomDTO;
@@ -11,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.apache.coyote.BadRequestException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/room")
@@ -87,5 +90,22 @@ public class RoomController {
             @Parameter(description = "Code of the room to fetch details for") @PathVariable String roomCode
     ) throws BadRequestException {
         return ResponseEntity.ok(roomService.getRoomDetails(roomCode));
+    }
+
+    @Operation(
+            summary = "Get voting results",
+            description = "Fetches polls results including categories and choices"
+    )
+    @GetMapping("/public/{roomCode}/results")
+    public ResponseEntity<List<PollDTO>> getPollResults(@PathVariable String roomCode) throws BadRequestException {
+        return ResponseEntity.ok().body(roomService.getPolls(roomCode));
+    }
+
+    @Operation(
+            summary = "Get participants count"
+    )
+    @GetMapping("/public/{roomCode}/participants")
+    public ResponseEntity<Integer> getParticipants(@PathVariable String roomCode) throws BadRequestException {
+        return ResponseEntity.ok().body(roomService.getParticipantsCount(roomCode));
     }
 }

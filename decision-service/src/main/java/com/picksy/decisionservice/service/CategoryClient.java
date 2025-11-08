@@ -33,7 +33,7 @@ public class CategoryClient {
                 .bodyToFlux(OptionDTO.class)
                 .timeout(Duration.ofSeconds(3))
                 .onErrorResume(throwable -> {
-                    System.err.println("Błąd pobierania z category-service: " + throwable.getMessage());
+                    System.err.println("category-service: " + throwable.getMessage());
                     return Flux.error(new RuntimeException("Category service unavailable", throwable));
                 });
     }
@@ -50,7 +50,7 @@ public class CategoryClient {
                 .bodyToMono(CategoryType.class)
                 .timeout(Duration.ofSeconds(3))
                 .onErrorResume(throwable -> {
-                    System.err.println("Błąd pobierania z category-service: " + throwable.getMessage());
+                    System.err.println("category-service: " + throwable.getMessage());
                     return Mono.error(new RuntimeException("Category service unavailable", throwable));
                 });
 

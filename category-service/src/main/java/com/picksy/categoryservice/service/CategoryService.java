@@ -4,8 +4,11 @@ import com.picksy.categoryservice.exception.FileUploadException;
 import com.picksy.categoryservice.model.Category;
 import com.picksy.categoryservice.model.Option;
 import com.picksy.categoryservice.repository.CategoryRepository;
+import com.picksy.categoryservice.repository.OptionRepository;
 import com.picksy.categoryservice.request.CategoryBody;
 import com.picksy.categoryservice.response.CategoryDTO;
+import com.picksy.categoryservice.response.CategoryWithOptionsDTO;
+import com.picksy.categoryservice.response.OptionDTO;
 import com.picksy.categoryservice.util.enums.Type;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.net.MalformedURLException;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Locale;
 
 @Service
@@ -26,7 +30,7 @@ public class CategoryService {
   private final CategoryRepository categoryRepository;
   private final FileUploadService fileUploadService;
 
-  public CategoryDTO findDTOById(Long id) throws BadRequestException {
+    public CategoryDTO findDTOById(Long id) throws BadRequestException {
     Category category = findById(id);
     return new CategoryDTO(
         category.getId(),

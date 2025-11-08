@@ -50,10 +50,6 @@ public class DecisionService {
       case MessageType.INCREASE_VOTED_COUNT:
         increaseVotedCount(roomCode, catId, pollMessage);
         break;
-
-      case MessageType.RESULTS:
-        getResults(roomCode, catId);
-        break;
     }
   }
 
@@ -200,7 +196,7 @@ public class DecisionService {
             votedCount, MessageType.INCREASE_VOTED_COUNT, pollMessage.getParticipantsCount()));
   }
 
-  protected void getResults(String roomCode, Long catId) {
+  public List<PollDTO> getResults(String roomCode) {
     List<Poll> polls = pollRepository.findAllWithChoicesByRoomCode(roomCode);
 
     if (polls.isEmpty()) {
@@ -217,9 +213,6 @@ public class DecisionService {
       pollDTOS.add(new PollDTO(poll.getId(), poll.getCategoryId(), choiceDTOS));
     }
 
-    System.out.println(choiceDTOS);
-
-    messagingTemplate.convertAndSend(
-            "/topic/poll/" + roomCode + "/" + catId, new PollResultsMessage(MessageType.RESULTS, pollDTOS));
+    return pollDTOS;
   }
 }

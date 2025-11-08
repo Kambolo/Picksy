@@ -9,5 +9,4 @@ public enum MessageType {
     MATCH,
     OPTIONS_ENDED,
     INCREASE_VOTED_COUNT,
-    RESULTS
 }

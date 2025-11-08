@@ -6,6 +6,8 @@ import com.picksy.categoryservice.model.Option;
 import com.picksy.categoryservice.repository.CategoryRepository;
 import com.picksy.categoryservice.repository.OptionRepository;
 import com.picksy.categoryservice.request.OptionBody;
+import com.picksy.categoryservice.response.CategoryDTO;
+import com.picksy.categoryservice.response.CategoryWithOptionsDTO;
 import com.picksy.categoryservice.response.OptionDTO;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -20,89 +22,106 @@ import java.util.List;
 @RequiredArgsConstructor
 public class OptionService {
 
-    private final OptionRepository optionRepository;
-    private final CategoryRepository categoryRepository;
-    private final CategoryService categoryService;
-    private final FileUploadService fileUploadService;
+  private final OptionRepository optionRepository;
+  private final CategoryRepository categoryRepository;
+  private final CategoryService categoryService;
+  private final FileUploadService fileUploadService;
 
-    public Option findById(Long id) throws BadRequestException {
-        return optionRepository.findById(id).orElseThrow(() -> new BadRequestException("Option not found"));
+  public Option findById(Long id) throws BadRequestException {
+    return optionRepository
+        .findById(id)
+        .orElseThrow(() -> new BadRequestException("Option not found"));
+  }
+
+  public List<OptionDTO> findAllForCategory(Long catId) throws BadRequestException {
+    Category category = categoryService.findById(catId);
+    if (category == null) {
+      throw new BadRequestException("Category not found");
+    }
+    return optionRepository.findAllByCategory(category).stream()
+        .map(option -> new OptionDTO(option.getId(), option.getName(), option.getPhotoUrl()))
+        .toList();
+  }
+
+  @Transactional
+  public OptionDTO add(OptionBody optionBody) throws BadRequestException {
+    Category category = categoryService.findById(optionBody.categoryId());
+
+    if (category == null) {
+      throw new BadRequestException("Category not found");
     }
 
-    public List<OptionDTO> findAllForCategory(Long catId) throws BadRequestException {
-        Category category = categoryService.findById(catId);
-        return optionRepository.findAllByCategory(category)
-                .stream()
-                .map(option -> new OptionDTO(
-                        option.getId(),
-                        option.getName(),
-                        option.getPhotoUrl()
-                )).toList();
+    Option option =
+        Option.builder()
+            .name(optionBody.name())
+            .photoUrl(
+                "https://res.cloudinary.com/dctiucda1/image/upload/v1760881210/image_oetxkk.png")
+            .build();
+
+    category.add(option);
+    optionRepository.save(option);
+
+    categoryRepository.save(category);
+
+    return new OptionDTO(option.getId(), option.getName(), option.getPhotoUrl());
+  }
+
+  @Transactional
+  public void addImage(Long id, MultipartFile image)
+      throws BadRequestException, FileUploadException {
+    Option option =
+        optionRepository
+            .findById(id)
+            .orElseThrow(() -> new BadRequestException("Option not found"));
+    String path = fileUploadService.addOptionImage(image, id);
+    option.setPhotoUrl(path);
+    optionRepository.save(option);
+  }
+
+  @Transactional
+  public void remove(Long id)
+      throws BadRequestException, FileUploadException, MalformedURLException {
+    Option option = findById(id);
+    Category category = option.getCategory();
+
+    try {
+      category.remove(option);
+    } catch (Exception e) {
+      throw new BadRequestException("Option can't be removed.");
     }
 
-    @Transactional
-    public OptionDTO add(OptionBody optionBody) throws BadRequestException {
-        Category category = categoryService.findById(optionBody.categoryId());
+    removeImg(id);
 
-        if(category == null) {throw new BadRequestException("Category not found");}
+    categoryRepository.save(category);
+  }
 
-        Option option = Option.builder()
-                .name(optionBody.name())
-                .photoUrl("https://res.cloudinary.com/dctiucda1/image/upload/v1760881210/image_oetxkk.png")
-                .build();
+  @Transactional
+  public void removeImg(Long id)
+      throws BadRequestException, FileUploadException, MalformedURLException {
+    Option option = findById(id);
+    String path = option.getPhotoUrl();
+    option.setPhotoUrl(null);
+    fileUploadService.removeImage(path);
+    optionRepository.save(option);
+  }
 
-        category.add(option);
-        optionRepository.save(option);
+  @Transactional
+  public void update(Long id, String name) throws BadRequestException {
+    Option option = findById(id);
 
-        categoryRepository.save(category);
-
-
-        return new OptionDTO(option.getId(), option.getName(), option.getPhotoUrl());
+    try {
+      option.setName(name);
+    } catch (Exception e) {
+      throw new BadRequestException("Option update fail.");
     }
 
-    @Transactional
-    public void addImage(Long id, MultipartFile image) throws BadRequestException, FileUploadException {
-        Option option = optionRepository.findById(id).orElseThrow(() -> new BadRequestException("Option not found"));
-        String path = fileUploadService.addOptionImage(image, id);
-        option.setPhotoUrl(path);
-        optionRepository.save(option);
-    }
+    optionRepository.save(option);
+  }
 
-    @Transactional
-    public void remove(Long id) throws BadRequestException, FileUploadException, MalformedURLException {
-        Option option = findById(id);
-        Category category = option.getCategory();
+  public CategoryWithOptionsDTO findCategoryWithOptions(Long id) throws BadRequestException {
+    CategoryDTO category = categoryService.findDTOById(id);
+    List<OptionDTO> options = findAllForCategory(id);
 
-        try{
-            category.remove(option);
-        }catch(Exception e){
-            throw new BadRequestException("Option can't be removed.");
-        }
-
-        removeImg(id);
-
-        categoryRepository.save(category);
-    }
-
-    @Transactional
-    public void removeImg(Long id) throws BadRequestException, FileUploadException, MalformedURLException {
-        Option option = findById(id);
-        String path = option.getPhotoUrl();
-        option.setPhotoUrl(null);
-        fileUploadService.removeImage(path);
-        optionRepository.save(option);
-    }
-
-    @Transactional
-    public void update(Long id, String name) throws BadRequestException {
-        Option option = findById(id);
-
-        try{
-            option.setName(name);
-        } catch (Exception e) {
-            throw new BadRequestException("Option update fail.");
-        }
-
-        optionRepository.save(option);
-    }
+    return new CategoryWithOptionsDTO(category, options);
+  }
 }

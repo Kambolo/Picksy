@@ -3,7 +3,9 @@ package com.picksy.categoryservice.controller;
 import com.picksy.categoryservice.exception.FileUploadException;
 import com.picksy.categoryservice.request.CategoryBody;
 import com.picksy.categoryservice.response.CategoryDTO;
+import com.picksy.categoryservice.response.CategoryWithOptionsDTO;
 import com.picksy.categoryservice.service.CategoryService;
+import com.picksy.categoryservice.service.OptionService;
 import com.picksy.categoryservice.util.enums.Type;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -27,6 +29,7 @@ import java.net.MalformedURLException;
 public class CategoryController {
 
     private final CategoryService categoryService;
+    private final OptionService optionService;
 
     @Operation(
             summary = "Create a new category",
@@ -242,5 +245,10 @@ public class CategoryController {
             @Parameter(description = "ID of the category") @PathVariable Long id
     ) throws BadRequestException {
         return ResponseEntity.ok(categoryService.findTypeById(id));
+    }
+
+    @GetMapping("/public/{id}/options")
+    public ResponseEntity<CategoryWithOptionsDTO> getCategoryWithOptions(@PathVariable Long id) throws BadRequestException {
+        return ResponseEntity.ok().body(optionService.findCategoryWithOptions(id));
     }
 }
