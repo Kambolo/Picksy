@@ -27,10 +27,10 @@ public class RoomController {
             description = "Creates a new room for voting using the provided request body."
     )
     @PostMapping("/secure/create")
-    public ResponseEntity<RoomDTO> createRoom(
+    public ResponseEntity<RoomDTO> createRoom( @RequestHeader ("X-User-Id") Long userId,
             @Parameter(description = "Room creation details") @RequestBody RoomCreateRequest request
     ) {
-        return ResponseEntity.ok(roomService.createRoom(request));
+        return ResponseEntity.ok(roomService.createRoom(request, userId));
     }
 
     @Operation(
@@ -38,10 +38,8 @@ public class RoomController {
             description = "Starts the voting process in a room. Only the room owner can trigger this action."
     )
     @PostMapping("/secure/start")
-    public ResponseEntity<String> startVoting(
-            @Parameter(description = "Room action details including ownerId and roomCode") @RequestBody RoomActionRequest request
-    ) throws BadRequestException {
-        roomService.startVoting(request.ownerId(), request.roomCode());
+    public ResponseEntity<String> startVoting(@RequestHeader ("X-User-Id") Long userId, @RequestBody RoomActionRequest request) throws BadRequestException {
+        roomService.startVoting(userId, request.roomCode());
         return ResponseEntity.ok("Voting started.");
     }
 
@@ -50,10 +48,8 @@ public class RoomController {
             description = "Changes the current category in the room to the next one. Only the room owner can perform this action."
     )
     @PostMapping("/secure/next")
-    public ResponseEntity<String> nextCategory(
-            @Parameter(description = "Room action details including ownerId and roomCode") @RequestBody RoomActionRequest request
-    ) throws BadRequestException {
-        roomService.nextCategory(request.ownerId(), request.roomCode());
+    public ResponseEntity<String> nextCategory(@RequestHeader ("X-User-Id") Long userId, @RequestBody RoomActionRequest request) throws BadRequestException {
+        roomService.nextCategory(userId, request.roomCode());
         return ResponseEntity.ok("Current category changed.");
     }
 
@@ -62,10 +58,8 @@ public class RoomController {
             description = "Ends the voting process for a room. Only the room owner can trigger this action."
     )
     @PostMapping("/secure/finish")
-    public ResponseEntity<String> finishVoting(
-            @Parameter(description = "Room action details including ownerId and roomCode") @RequestBody RoomActionRequest request
-    ) throws BadRequestException {
-        roomService.endVoting(request.roomCode(), request.ownerId());
+    public ResponseEntity<String> finishVoting(@RequestHeader ("X-User-Id") Long userId, @RequestBody RoomActionRequest request) throws BadRequestException {
+        roomService.endVoting(request.roomCode(), userId);
         return ResponseEntity.ok("Room closed.");
     }
 
@@ -74,10 +68,8 @@ public class RoomController {
             description = "Closes the room and prevents further voting. Only the room owner can trigger this action."
     )
     @PostMapping("/secure/close")
-    public ResponseEntity<String> closeRoom(
-            @Parameter(description = "Room action details including ownerId and roomCode") @RequestBody RoomActionRequest request
-    ) throws BadRequestException {
-        roomService.closeRoom(request.ownerId(), request.roomCode());
+    public ResponseEntity<String> closeRoom(@RequestHeader ("X-User-Id") Long userId, @RequestBody RoomActionRequest request) throws BadRequestException {
+        roomService.closeRoom(userId, request.roomCode());
         return ResponseEntity.ok("Room closed.");
     }
 
@@ -107,5 +99,10 @@ public class RoomController {
     @GetMapping("/public/{roomCode}/participants")
     public ResponseEntity<Integer> getParticipants(@PathVariable String roomCode) throws BadRequestException {
         return ResponseEntity.ok().body(roomService.getParticipantsCount(roomCode));
+    }
+
+    @GetMapping("/secure/history")
+    public ResponseEntity<List<RoomDTO>> getUserHistory(@RequestHeader("X-User-Id") Long userId) throws BadRequestException {
+        return ResponseEntity.ok().body(roomService.getAllClosedRoomsForUser(userId));
     }
 }

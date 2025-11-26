@@ -34,14 +34,16 @@ public class JwtUtil {
         return Long.parseLong(subject);
     }
 
-    public String getEmailFromToken(String token) {
+    public String getStringFromToken(String token, String value) {
         return Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()
                 .parseClaimsJws(token)
                 .getBody()
-                .get("email", String.class);
+                .get(value, String.class);
     }
+
+
 
     public boolean validateJwtToken(String token) {
         try {

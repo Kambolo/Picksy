@@ -1,0 +1,25 @@
+# ------------------------
+# IntelliJ IDEA
+# ------------------------
+.idea/
+*.iml
+*.iws
+out/
+*.class
+
+# ------------------------
+# Global OS files
+# ------------------------
+.DS_Store
+Thumbs.db
+
+# ------------------------
+# Environment files
+# ------------------------
+.env
+
+# ------------------------
+# Docker
+# ------------------------
+*.dockerfile
+docker-compose.override.yml

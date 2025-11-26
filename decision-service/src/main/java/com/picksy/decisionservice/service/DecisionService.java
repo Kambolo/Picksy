@@ -144,8 +144,8 @@ public class DecisionService {
       // increase count for choices
       for (Choice choice : choices) {
         choice.setCount(choice.getCount() + 1);
+        choiceRepository.save(choice);
       }
-
       poll.setVotedCount(poll.getVotedCount() + 1);
       pollRepository.save(poll);
 
@@ -198,20 +198,22 @@ public class DecisionService {
 
   public List<PollDTO> getResults(String roomCode) {
     List<Poll> polls = pollRepository.findAllWithChoicesByRoomCode(roomCode);
+    System.out.println("polls: " + polls);
 
     if (polls.isEmpty()) {
       throw new BadRequestException("Poll not found");
     }
 
-    List<ChoiceDTO> choiceDTOS = new ArrayList<>();
     List<PollDTO> pollDTOS = new ArrayList<>();
 
     for (Poll poll : polls) {
+      List<ChoiceDTO> choiceDTOS = new ArrayList<>();
       for (Choice choice : poll.getChoices()) {
         choiceDTOS.add(new ChoiceDTO(choice.getOptionId(), choice.getCount()));
       }
-      pollDTOS.add(new PollDTO(poll.getId(), poll.getCategoryId(), choiceDTOS));
+      pollDTOS.add(new PollDTO(poll.getId(), poll.getCategoryId(), choiceDTOS, poll.getParticipantsCount()));
     }
+    System.out.println("pollDTOS: " + pollDTOS);
 
     return pollDTOS;
   }

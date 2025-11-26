@@ -20,21 +20,21 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
     private final JwtUtil jwtUtils;
 
     private final List<String> publicPaths = List.of(
-            "/auth",
+            "/auth/",
             "/api/category/public",
             "/api/option/public",
             "/api/profile/public",
             "/api/room/public",
+            "/api/decision/public",
             "/ws-room",
             "/ws-poll",
-            "/auth-service",
-            "/category-service",
-            "/room-service",
-            "/user-service"
+            "/oauth2",
+            "/login"
     );
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+
         String path = exchange.getRequest().getURI().getPath();
 
         System.out.println("=== AuthGlobalFilter ===");
@@ -50,7 +50,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
         }
 
         // Special case: /auth/account/secure/me is NOT public
-        if (path.startsWith("/auth/account/secure/me")) {
+        if (path.contains("secure")) {
             isPublic = false;
         }
 
@@ -70,11 +70,13 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
 
         // Add user headers for non-WebSocket paths
         Long userId = jwtUtils.getUserIdFromToken(token);
-        String email = jwtUtils.getEmailFromToken(token);
+        String email = jwtUtils.getStringFromToken(token, "email");
+        String role = jwtUtils.getStringFromToken(token, "role");
 
         ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
                 .header("X-User-Id", String.valueOf(userId))
                 .header("X-User-Email", email != null ? email : "")
+                .header("X-User-Role", role != null ? role : "USER")
                 .build();
 
         exchange = exchange.mutate().request(mutatedRequest).build();

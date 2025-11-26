@@ -4,11 +4,8 @@ import com.picksy.categoryservice.exception.FileUploadException;
 import com.picksy.categoryservice.model.Category;
 import com.picksy.categoryservice.model.Option;
 import com.picksy.categoryservice.repository.CategoryRepository;
-import com.picksy.categoryservice.repository.OptionRepository;
 import com.picksy.categoryservice.request.CategoryBody;
 import com.picksy.categoryservice.response.CategoryDTO;
-import com.picksy.categoryservice.response.CategoryWithOptionsDTO;
-import com.picksy.categoryservice.response.OptionDTO;
 import com.picksy.categoryservice.util.enums.Type;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -20,8 +17,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.net.MalformedURLException;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -30,18 +25,12 @@ public class CategoryService {
   private final CategoryRepository categoryRepository;
   private final FileUploadService fileUploadService;
 
-    public CategoryDTO findDTOById(Long id) throws BadRequestException {
+  private final String DEFAUTL_PHOTO_URL =
+      "https://res.cloudinary.com/dctiucda1/image/upload/v1763999902/image_yg0lsn.png";
+
+  public CategoryDTO findDTOById(Long id) throws BadRequestException {
     Category category = findById(id);
-    return new CategoryDTO(
-        category.getId(),
-        category.getName(),
-        category.getAuthorID(),
-        category.getType(),
-        category.getPhotoUrl(),
-        category.getDescription(),
-        category.getViews(),
-        category.getCreated(),
-        category.getIsPublic());
+    return mapToDTO(category);
   }
 
   Category findById(Long id) throws BadRequestException {
@@ -51,71 +40,32 @@ public class CategoryService {
   }
 
   public Page<CategoryDTO> findAllPublic(Pageable pageable) {
-    return categoryRepository
-        .findAllByIsPublic(true, pageable)
-        .map(
-            category ->
-                new CategoryDTO(
-                    category.getId(),
-                    category.getName(),
-                    category.getAuthorID(),
-                    category.getType(),
-                    category.getPhotoUrl(),
-                    category.getDescription(),
-                    category.getViews(),
-                    category.getCreated(),
-                    category.getIsPublic()));
+    return categoryRepository.findAllByIsPublic(true, pageable).map(this::mapToDTO);
   }
 
-  public Page<CategoryDTO> findAllByAuthorID(Long userId, Pageable pageable, Long authorID, Boolean isPublic)
+  public Page<CategoryDTO> findAllByAuthorID(
+      Long userId, String role, Pageable pageable, Long authorID, Boolean isPublic)
       throws BadRequestException {
 
-      if(!userId.equals(authorID)) {
-          throw new BadRequestException("Author ID not match");
-      }
-
-    Page<Category> categories =null;
-
-    if(!isPublic) {
-        categories = categoryRepository.findAllByAuthorID(authorID, pageable);
-    }else{
-        categories = categoryRepository.findAllByAuthorIDAndIsPublic(authorID, true, pageable);
+    if (!role.equals("ADMIN") && !userId.equals(authorID)) {
+      throw new BadRequestException("Author ID not match");
     }
 
+    Page<Category> categories = null;
 
-    if (categories.isEmpty()) {
-      throw new BadRequestException("Category not found.");
+    if (!isPublic) {
+      categories = categoryRepository.findAllByAuthorID(authorID, pageable);
+    } else {
+      categories = categoryRepository.findAllByAuthorIDAndIsPublic(authorID, true, pageable);
     }
 
-    return categories.map(
-        category ->
-            new CategoryDTO(
-                category.getId(),
-                category.getName(),
-                category.getAuthorID(),
-                category.getType(),
-                category.getPhotoUrl(),
-                category.getDescription(),
-                category.getViews(),
-                category.getCreated(),
-                category.getIsPublic()));
+    return categories.map(this::mapToDTO);
   }
 
   public Page<CategoryDTO> findBuiltInCategories(Pageable pageable) {
     Page<Category> categories = categoryRepository.findByAuthorIDIsNull(pageable);
 
-    return categories.map(
-        category ->
-            new CategoryDTO(
-                category.getId(),
-                category.getName(),
-                category.getAuthorID(),
-                category.getType(),
-                category.getPhotoUrl(),
-                category.getDescription(),
-                category.getViews(),
-                category.getCreated(),
-                category.getIsPublic()));
+    return categories.map(this::mapToDTO);
   }
 
   public Type findTypeById(Long id) throws BadRequestException {
@@ -125,58 +75,36 @@ public class CategoryService {
 
   public Page<CategoryDTO> findPublicCategoriesByPattern(String pattern, Pageable pageable) {
     Page<Category> categories =
-        categoryRepository.findAllByIsPublicAndNameContainingIgnoreCase(true, pattern.toLowerCase(), pageable);
+        categoryRepository.findAllByIsPublicAndNameContainingIgnoreCase(
+            true, pattern.toLowerCase(), pageable);
 
-    return categories.map(
-        category ->
-            new CategoryDTO(
-                category.getId(),
-                category.getName(),
-                category.getAuthorID(),
-                category.getType(),
-                category.getPhotoUrl(),
-                category.getDescription(),
-                category.getViews(),
-                category.getCreated(),
-                category.getIsPublic()));
+    return categories.map(this::mapToDTO);
   }
 
   public Page<CategoryDTO> findUserCategoriesByPattern(
-      Long userId, Long authorID, String pattern, Pageable pageable, Boolean isPublic) throws BadRequestException {
+      Long userId, Long authorID, String role, String pattern, Pageable pageable, Boolean isPublic)
+      throws BadRequestException {
 
-      if(!userId.equals(authorID)) {
+    if (!role.equals("ADMIN") && !userId.equals(authorID)) {
       throw new BadRequestException("Provided id doesn't match the author Id");
     }
 
-      Page<Category> categories = null;
-      if(!isPublic) {
-          categories =
-                  categoryRepository.findAllByAuthorIDAndNameContainingIgnoreCase(
-                          authorID, pattern.toLowerCase(), pageable);
-      }else {
-          categories =
-                  categoryRepository.findAllByAuthorIDAndIsPublicAndNameContainingIgnoreCase(
-                          authorID, true, pattern.toLowerCase(), pageable);
-      }
+    Page<Category> categories = null;
+    if (!isPublic) {
+      categories =
+          categoryRepository.findAllByAuthorIDAndNameContainingIgnoreCase(
+              authorID, pattern.toLowerCase(), pageable);
+    } else {
+      categories =
+          categoryRepository.findAllByAuthorIDAndIsPublicAndNameContainingIgnoreCase(
+              authorID, true, pattern.toLowerCase(), pageable);
+    }
 
-
-    return categories.map(
-        category ->
-            new CategoryDTO(
-                category.getId(),
-                category.getName(),
-                category.getAuthorID(),
-                category.getType(),
-                category.getPhotoUrl(),
-                category.getDescription(),
-                category.getViews(),
-                category.getCreated(),
-                category.getIsPublic()));
+    return categories.map(this::mapToDTO);
   }
 
   @Transactional
-  public CategoryDTO create(CategoryBody catBody) throws BadRequestException {
-
+  public CategoryDTO create(Long userId, CategoryBody catBody) throws BadRequestException {
     if (catBody.name() == null || catBody.name().isBlank())
       throw new BadRequestException("Category name is required.");
 
@@ -190,11 +118,10 @@ public class CategoryService {
       Category category =
           Category.builder()
               .name(catBody.name())
-              .authorID(catBody.author())
+              .authorID(userId)
               .type(Type.valueOf(catBody.type()))
               .description(catBody.description())
-              .photoUrl(
-                  "https://res.cloudinary.com/dctiucda1/image/upload/v1760618779/image_a9gqss.png")
+              .photoUrl(DEFAUTL_PHOTO_URL)
               .created(LocalDateTime.now())
               .views(0)
               .isPublic(catBody.isPublic())
@@ -202,34 +129,37 @@ public class CategoryService {
 
       Category savedCategory = categoryRepository.save(category);
 
-      return new CategoryDTO(
-          savedCategory.getId(),
-          savedCategory.getName(),
-          savedCategory.getAuthorID(),
-          savedCategory.getType(),
-          savedCategory.getPhotoUrl(),
-          savedCategory.getDescription(),
-          savedCategory.getViews(),
-          LocalDateTime.now(),
-          savedCategory.getIsPublic());
+      return mapToDTO(savedCategory);
     } catch (Exception e) {
       throw new BadRequestException("Bad category body.");
     }
   }
 
   @Transactional
-  public void addImage(Long id, MultipartFile image)
+  public void addImage(Long userId, String role, Long id, MultipartFile image)
       throws BadRequestException, FileUploadException {
     Category category = findById(id);
+
+    checkAuthor(userId, role, category);
+
     String path = fileUploadService.addCategoryImage(image, id);
     category.setPhotoUrl(path);
     categoryRepository.save(category);
   }
 
   @Transactional
-  public void remove(Long id)
+  protected void addImageUrl(Long id, String path) throws BadRequestException {
+    Category category = findById(id);
+    category.setPhotoUrl(path);
+    categoryRepository.save(category);
+  }
+
+  @Transactional
+  public void remove(Long userId, String role, Long id)
       throws BadRequestException, FileUploadException, MalformedURLException {
     Category category = findById(id);
+
+    checkAuthor(userId, role, category);
 
     // Remove all option images manually
     for (Option option : category.getOptions()) {
@@ -239,15 +169,17 @@ public class CategoryService {
       }
     }
 
-    removeImg(id);
+    removeImg(userId, role, id);
 
     categoryRepository.delete(category);
   }
 
   @Transactional
-  public void removeImg(Long id)
+  public void removeImg(Long userId, String role, Long id)
       throws BadRequestException, FileUploadException, MalformedURLException {
     Category category = findById(id);
+
+    checkAuthor(userId, role, category);
 
     String filePath = category.getPhotoUrl();
 
@@ -266,22 +198,23 @@ public class CategoryService {
   }
 
   @Transactional
-  public void updateCategory(Long id, CategoryBody categoryBody) throws BadRequestException {
+  public void updateCategory(Long userId, String role, Long id, CategoryBody categoryBody)
+      throws BadRequestException {
     Category category = findById(id);
     if (category == null) throw new BadRequestException("Category not found.");
 
-    System.out.println(categoryBody);
+    checkAuthor(userId, role, category);
 
     if (categoryBody.name() != null) {
       category.setName(categoryBody.name());
     }
     if (categoryBody.type() != null) {
-        try {
-            Type type = Type.valueOf(categoryBody.type());
-            category.setType(type);
-        } catch (IllegalArgumentException e) {
-            throw new BadRequestException("Invalid category type: " + categoryBody.type());
-        }
+      try {
+        Type type = Type.valueOf(categoryBody.type());
+        category.setType(type);
+      } catch (IllegalArgumentException e) {
+        throw new BadRequestException("Invalid category type: " + categoryBody.type());
+      }
     }
     if (categoryBody.description() != null) {
       category.setDescription(categoryBody.description());
@@ -291,5 +224,26 @@ public class CategoryService {
     }
 
     categoryRepository.save(category);
+  }
+
+  protected void checkAuthor(Long userId, String role, Category category)
+      throws BadRequestException {
+    if (role.equals("ADMIN")) return;
+    if (!userId.equals(category.getAuthorID())) {
+      throw new BadRequestException("You are not allowed to access this category.");
+    }
+  }
+
+  private CategoryDTO mapToDTO(Category category) {
+    return new CategoryDTO(
+        category.getId(),
+        category.getName(),
+        category.getAuthorID(),
+        category.getType(),
+        category.getPhotoUrl(),
+        category.getDescription(),
+        category.getViews(),
+        category.getCreated(),
+        category.getIsPublic());
   }
 }

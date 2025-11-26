@@ -41,9 +41,11 @@ public class OptionController {
     )
     @PostMapping("/secure")
     public ResponseEntity<OptionDTO> addOption(
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader("X-User-Role") String role,
             @Parameter(description = "Data for the new option") @RequestBody OptionBody optionBody
     ) throws BadRequestException {
-        return ResponseEntity.status(HttpStatus.CREATED).body(optionService.add(optionBody));
+        return ResponseEntity.status(HttpStatus.CREATED).body(optionService.add(userId, role, optionBody));
     }
 
     @Operation(
@@ -52,10 +54,12 @@ public class OptionController {
     )
     @PatchMapping(value = "/secure/image/{optId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> addOptionImage(
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader("X-User-Role") String role,
             @Parameter(description = "Image file to upload") @RequestParam MultipartFile image,
             @Parameter(description = "ID of the option to attach the image to") @PathVariable Long optId
     ) throws BadRequestException, FileUploadException {
-        optionService.addImage(optId, image);
+        optionService.addImage(userId, role, optId, image);
         return ResponseEntity.status(HttpStatus.CREATED).body("Option image added.");
     }
 
@@ -65,9 +69,11 @@ public class OptionController {
     )
     @DeleteMapping("/secure/{optionId}")
     public ResponseEntity<String> deleteOption(
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader("X-User-Role") String role,
             @Parameter(description = "ID of the option to delete") @PathVariable Long optionId
     ) throws BadRequestException, FileUploadException, MalformedURLException {
-        optionService.remove(optionId);
+        optionService.remove(userId, role, optionId);
         return ResponseEntity.ok("Option removed.");
     }
 
@@ -77,9 +83,11 @@ public class OptionController {
     )
     @DeleteMapping("/secure/image/{optionId}")
     public ResponseEntity<String> deleteOptionImage(
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader("X-User-Role") String role,
             @Parameter(description = "ID of the option") @PathVariable Long optionId
     ) throws BadRequestException, FileUploadException, MalformedURLException {
-        optionService.removeImg(optionId);
+        optionService.removeImg(userId, role, optionId);
         return ResponseEntity.ok("Option image removed.");
     }
 
@@ -89,10 +97,12 @@ public class OptionController {
     )
     @PatchMapping("/secure/{optId}")
     public ResponseEntity<String> updateOption(
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader("X-User-Role") String role,
             @Parameter(description = "ID of the option") @PathVariable Long optId,
             @Parameter(description = "New name for the option") @RequestBody String name
     ) throws BadRequestException {
-        optionService.update(optId, name);
+        optionService.update(userId, role, optId, name);
         return ResponseEntity.ok("Option updated.");
     }
 }

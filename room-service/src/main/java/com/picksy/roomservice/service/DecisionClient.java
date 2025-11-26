@@ -18,7 +18,7 @@ public class DecisionClient {
     public Flux<PollDTO> getResults(String roomCode) {
         return webClientBuilder.build()
                 .get()
-                .uri("lb://decision-service/api/decision/room/{roomCode}", roomCode)
+                .uri("lb://decision-service/api/decision/secure/room/{roomCode}", roomCode)
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, response ->
                         response.bodyToMono(String.class)

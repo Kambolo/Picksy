@@ -5,68 +5,96 @@ spring:
     name: api-gateway
   cloud:
     gateway:
-      globalcors:
-        corsConfigurations:
-          '[/auth/**]':
-            allowedOriginPatterns:
-              - "http://localhost:5173"
-              - "http://192.168.0.104:5173"
-            allowedMethods:
-              - GET
-              - POST
-              - PUT
-              - PATCH
-              - DELETE
-              - OPTIONS
-            allowedHeaders: "*"
-            allowCredentials: true
-          '[/api/**]':
-            allowedOriginPatterns:
-              - "http://localhost:5173"
-            allowedMethods:
-              - GET
-              - POST
-              - PUT
-              - PATCH
-              - DELETE
-              - OPTIONS
-            allowedHeaders: "*"
-            allowCredentials: true
+      server:
+        webflux:
+          globalcors:
+            corsConfigurations:
+              '[/auth/**]':
+                allowedOriginPatterns:
+                  - "http://localhost:5173"
+                  - "http://192.168.0.104:5173"
+                allowedMethods:
+                  - GET
+                  - POST
+                  - PUT
+                  - PATCH
+                  - DELETE
+                  - OPTIONS
+                allowedHeaders: "*"
+                allowCredentials: true
+              '[/api/**]':
+                allowedOriginPatterns:
+                  - "http://localhost:5173"
+                allowedMethods:
+                  - GET
+                  - POST
+                  - PUT
+                  - PATCH
+                  - DELETE
+                  - OPTIONS
+                allowedHeaders: "*"
+                allowCredentials: true
 
-      discovery:
-        locator:
-          enabled: true  # pozwala automatycznie tworzyć trasy na podstawie Eureka
-      routes:
-        - id: auth-service
-          uri: lb://AUTH-SERVICE
-          predicates:
-            - Path=/auth/**, /auth-service/v3/api-docs
+          routes:
+            - id: auth-service
+              uri: lb://AUTH-SERVICE
+              predicates:
+                - Path=/auth/**, /auth-service/v3/api-docs, /oauth2/**, /login/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: authCircuitBreaker
+                    fallbackUri: forward:/fallback/auth
 
-        - id: user-service
-          uri: lb://USER-SERVICE
-          predicates:
-            - Path=/api/profile/**, /user-service/v3/api-docs
+            - id: user-service
+              uri: lb://USER-SERVICE
+              predicates:
+                - Path=/api/profile/**, /user-service/v3/api-docs
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: userCircuitBreaker
+                    fallbackUri: forward:/fallback/user
 
-        - id: category-service
-          uri: lb://CATEGORY-SERVICE
-          predicates:
-            - Path=/api/category/**, /api/option/**, /category-service/v3/api-docs, /category-service/swagger-ui/**
+            - id: category-service
+              uri: lb://CATEGORY-SERVICE
+              predicates:
+                - Path=/api/category/**, /api/option/**, /category-service/v3/api-docs, /category-service/swagger-ui/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: categoryCircuitBreaker
+                    fallbackUri: forward:/fallback/category
 
-        - id: room-service
-          uri: lb://ROOM-SERVICE
-          predicates:
-            - Path=/api/room/**, /room-service/v3/api-docs
+            - id: room-service
+              uri: lb://ROOM-SERVICE
+              predicates:
+                - Path=/api/room/**, /room-service/v3/api-docs
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: roomCircuitBreaker
+                    fallbackUri: forward:/fallback/room
 
-        - id: room-ws
-          uri: lb:ws://ROOM-SERVICE
-          predicates:
-            - Path=/ws-room/**
+            - id: room-ws
+              uri: lb:ws://ROOM-SERVICE
+              predicates:
+                - Path=/ws-room/**
 
-        - id: decision-ws
-          uri: lb:ws://DECISION-SERVICE
-          predicates:
-            - Path=/ws-poll/**
+            - id: decision-service
+              uri: lb://DECISION-SERVICE
+              predicates:
+                - Path=/api/room/**, /room-service/v3/api-docs
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: decisionCircuitBreaker
+                    fallbackUri: forward:/fallback/decision
 
+            - id: decision-ws
+              uri: lb:ws://DECISION-SERVICE
+              predicates:
+                - Path=/ws-poll/**
 
 springdoc:
   enable-native-support: true
@@ -87,3 +115,44 @@ springdoc:
         name: Room Service
       - url: /auth-service/v3/api-docs
         name: Auth Service
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        failureRateThreshold: 50
+        waitDurationInOpenState: 50s
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 20
+        permittedNumberOfCallsInHalfOpenState: 3
+
+      configForServiceWithImageUpload:
+        failureRateThreshold: 50
+        waitDurationInOpenState: 80s
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 20
+        permittedNumberOfCallsInHalfOpenState: 3
+
+    instances:
+      authCircuitBreaker:
+        baseConfig: default
+
+      userCircuitBreaker:
+        baseConfig: configForServiceWithImageUpload
+
+      categoryCircuitBreaker:
+        baseConfig: configForServiceWithImageUpload
+
+      roomCircuitBreaker:
+        baseConfig: default
+
+      decisionCircuitBreaker:
+        baseConfig: default
+
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka/

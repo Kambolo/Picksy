@@ -1,5 +1,6 @@
 package com.picksy.authservice.config;
 
+import com.picksy.UserProfileMessage;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,7 +20,7 @@ public class KafkaProducerConfig {
     private String bootstrapServers;
 
     @Bean
-    public ProducerFactory<String, Long> producerFactory() {
+    public ProducerFactory<String, UserProfileMessage> producerFactory() {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
@@ -28,7 +29,7 @@ public class KafkaProducerConfig {
     }
 
     @Bean
-    public KafkaTemplate<String, Long> kafkaTemplate() {
+    public KafkaTemplate<String, UserProfileMessage> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
     }
 }

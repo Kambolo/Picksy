@@ -4,6 +4,8 @@ import com.picksy.authservice.Util.ROLE;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Data
 @Table(name = "users")
@@ -26,7 +28,18 @@ public class User {
     @Enumerated(EnumType.STRING)
     private ROLE role;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, optional = true)
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private ForgotPassword forgotPassword;
 
+    @Column(nullable = false)
+    private Boolean isBanned;
+
+    private LocalDateTime bannedUntil;
+
+    public void setForgotPassword(ForgotPassword forgotPassword) {
+        this.forgotPassword = forgotPassword;
+        if (forgotPassword != null && forgotPassword.getUser() != this) {
+            forgotPassword.setUser(this);
+        }
+    }
 }

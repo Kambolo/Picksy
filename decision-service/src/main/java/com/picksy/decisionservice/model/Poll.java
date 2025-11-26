@@ -31,6 +31,7 @@ public class Poll {
 
     private int participantsCount;
 
+    @Enumerated(EnumType.STRING)
     private CategoryType categoryType;
 
     // for counting users that already voted

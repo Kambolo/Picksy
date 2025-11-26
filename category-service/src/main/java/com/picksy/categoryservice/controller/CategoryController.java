@@ -31,27 +31,25 @@ public class CategoryController {
     private final CategoryService categoryService;
     private final OptionService optionService;
 
-    @Operation(
-            summary = "Create a new category",
-            description = "Creates a new category with the provided data."
-    )
+
+    @Operation(summary = "Create a new category", description = "Creates a new category with the provided data.")
     @PostMapping("/secure")
     public ResponseEntity<CategoryDTO> createCategory(
-            @Parameter(description = "Category data to create") @RequestBody CategoryBody catBody
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestBody CategoryBody catBody
     ) throws BadRequestException {
-        return ResponseEntity.status(HttpStatus.CREATED).body(categoryService.create(catBody));
+        return ResponseEntity.status(HttpStatus.CREATED).body(categoryService.create(userId, catBody));
     }
 
-    @Operation(
-            summary = "Upload an image for a category",
-            description = "Adds an image to an existing category by category ID."
-    )
+    @Operation(summary = "Upload an image for a category", description = "Adds an image to an existing category by category ID.")
     @PatchMapping(value = "/secure/image/{catId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> addCategoryImage(
-            @Parameter(description = "Image file to upload") @RequestParam MultipartFile image,
-            @Parameter(description = "ID of the category to attach the image to") @PathVariable Long catId
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader("X-User-Role") String role,
+            @RequestParam MultipartFile image,
+            @PathVariable Long catId
     ) throws BadRequestException, FileUploadException {
-        categoryService.addImage(catId, image);
+        categoryService.addImage(userId, role, catId, image);
         return ResponseEntity.status(HttpStatus.CREATED).body("Category image added.");
     }
 
@@ -78,6 +76,7 @@ public class CategoryController {
     @GetMapping("/secure/author/{authorId}")
     public Page<CategoryDTO> getAllCategoriesForAuthor(
             @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader("X-User-Role") String role,
             @Parameter(description = "Author's user ID") @PathVariable Long authorId,
             @Parameter(description = "Page number, default is 0") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size, default is 5") @RequestParam(defaultValue = "5") int size,
@@ -86,7 +85,7 @@ public class CategoryController {
     ) throws BadRequestException {
         Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
         Pageable pageable = PageRequest.of(page, size, sort);
-        return categoryService.findAllByAuthorID(userId, pageable, authorId, false);
+        return categoryService.findAllByAuthorID(userId, role, pageable, authorId, false);
     }
 
     @Operation(
@@ -103,7 +102,7 @@ public class CategoryController {
     ) throws BadRequestException {
         Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
         Pageable pageable = PageRequest.of(page, size, sort);
-        return categoryService.findAllByAuthorID(authorId, pageable, authorId, true);
+        return categoryService.findAllByAuthorID(authorId, "USER", pageable, authorId, true);
     }
 
     @Operation(
@@ -127,7 +126,7 @@ public class CategoryController {
             description = "Fetches public categories matching a given pattern with optional pagination and sorting."
     )
     @GetMapping("/public/search")
-    public Page<CategoryDTO> getPublicCategoriesByPattern(
+    public ResponseEntity<Page<CategoryDTO>> getPublicCategoriesByPattern(
             @Parameter(description = "Search pattern") @RequestParam String pattern,
             @Parameter(description = "Page number, default is 0") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size, default is 5") @RequestParam(defaultValue = "5") int size,
@@ -136,7 +135,7 @@ public class CategoryController {
     ) {
         Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
         Pageable pageable = PageRequest.of(page, size, sort);
-        return categoryService.findPublicCategoriesByPattern(pattern, pageable);
+        return ResponseEntity.ok().body(categoryService.findPublicCategoriesByPattern(pattern, pageable));
     }
 
     @Operation(
@@ -146,6 +145,7 @@ public class CategoryController {
     @GetMapping("/secure/search/author/{authorId}")
     public Page<CategoryDTO> getUserCategoriesByPattern(
             @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader("X-User-Role") String role,
             @Parameter(description = "User ID") @PathVariable Long authorId,
             @Parameter(description = "Search pattern") @RequestParam String pattern,
             @Parameter(description = "Page number, default is 0") @RequestParam(defaultValue = "0") int page,
@@ -155,7 +155,7 @@ public class CategoryController {
     ) throws BadRequestException {
         Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
         Pageable pageable = PageRequest.of(page, size, sort);
-        return categoryService.findUserCategoriesByPattern(userId, authorId, pattern, pageable, false);
+        return categoryService.findUserCategoriesByPattern(userId, authorId, role, pattern, pageable, false);
     }
 
     @Operation(
@@ -173,7 +173,7 @@ public class CategoryController {
     ) throws BadRequestException {
         Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
         Pageable pageable = PageRequest.of(page, size, sort);
-        return categoryService.findUserCategoriesByPattern(authorId, authorId, pattern, pageable, true);
+        return categoryService.findUserCategoriesByPattern(authorId, authorId, "USER", pattern, pageable, true);
     }
 
     @Operation(
@@ -182,9 +182,11 @@ public class CategoryController {
     )
     @DeleteMapping("/secure/{catId}")
     public ResponseEntity<String> deleteCategory(
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader("X-User-Role") String role,
             @Parameter(description = "ID of the category to delete") @PathVariable Long catId
     ) throws BadRequestException, FileUploadException, MalformedURLException {
-        categoryService.remove(catId);
+        categoryService.remove(userId, role, catId);
         return ResponseEntity.ok("Category removed.");
     }
 
@@ -194,22 +196,23 @@ public class CategoryController {
     )
     @DeleteMapping("/secure/image/{catId}")
     public ResponseEntity<String> deleteCategoryImage(
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader("X-User-Role") String role,
             @Parameter(description = "ID of the category") @PathVariable Long catId
     ) throws BadRequestException, FileUploadException, MalformedURLException {
-        categoryService.removeImg(catId);
+        categoryService.removeImg(userId, role, catId);
         return ResponseEntity.ok("Category image removed.");
     }
 
-    @Operation(
-            summary = "Update category information",
-            description = "Updates the details of an existing category by ID."
-    )
+    @Operation(summary = "Update category information", description = "Updates the details of an existing category by ID.")
     @PatchMapping("/secure/{catId}")
     public ResponseEntity<String> updateCategory(
-            @Parameter(description = "ID of the category") @PathVariable Long catId,
-            @Parameter(description = "Updated category data") @RequestBody CategoryBody categoryBody
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader("X-User-Role") String role,
+            @PathVariable Long catId,
+            @RequestBody CategoryBody categoryBody
     ) throws BadRequestException {
-        categoryService.updateCategory(catId, categoryBody);
+        categoryService.updateCategory(userId, role, catId, categoryBody);
         return ResponseEntity.ok("Category updated.");
     }
 

@@ -1,0 +1,34 @@
+.search-bar-container {
+    display: flex;
+    justify-content: start;
+    position: relative;
+}
+
+.search-bar-container input{
+    font-size: 1.5rem;
+    color: #494848;
+    border-radius: 30px;
+    border: 1px solid #e0c79a;
+    padding: 0.8rem 1.2rem;
+    min-width: 40rem;
+}
+
+.search-bar-container input:focus{
+    outline: none;
+}
+
+.search-bar-container svg{
+    color: #676565;
+    position: absolute;
+    right: 1rem;
+    top: 0.5rem;
+}
+
+@media only screen and (max-width: 1000px){
+    .search-bar-container input {
+        width: 100%;
+    }
+    .search-bar-container input {
+        min-width: unset;
+    }
+}

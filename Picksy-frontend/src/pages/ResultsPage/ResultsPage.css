@@ -1,0 +1,13 @@
+.result-header-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+}
+
+.main-header {
+  width: 56rem;
+  background: white;
+  border-radius: 0 0 1rem 1rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+}

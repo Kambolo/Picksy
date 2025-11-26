@@ -17,7 +17,7 @@ import java.util.List;
 public class RestDecisionController {
     private final DecisionService decisionService;
 
-    @GetMapping("/room/{roomCode}")
+    @GetMapping("/secure/room/{roomCode}")
     public ResponseEntity<List<PollDTO>> getResults(@PathVariable String roomCode) {
         return ResponseEntity.ok().body(decisionService.getResults(roomCode));
     }

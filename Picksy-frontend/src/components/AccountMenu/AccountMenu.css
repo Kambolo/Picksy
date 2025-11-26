@@ -1,0 +1,90 @@
+.account-menu-container {
+  position: relative;
+  display: inline-block;
+  margin-right: 2em;
+}
+
+/* Account button styling */
+.account-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.625rem;
+  border: none;
+  background-color: var(--navbar-color);
+  cursor: pointer;
+}
+
+.sign-in-button:hover {
+  opacity: 0.7;
+}
+
+/* Dropdown menu styling */
+.drop-down-content {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.5rem);
+  width: 12rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  animation: dropdownFadeIn 0.2s ease-in-out;
+  z-index: 50;
+}
+
+/* Dropdown list styling */
+.drop-down-content ul {
+  list-style: none;
+  margin: 0;
+  padding: 0.25rem 0;
+}
+
+.drop-down-content li {
+  margin: 0;
+  padding: 0;
+}
+
+.drop-down-content button {
+  width: 100%;
+  padding: 0.625rem 1rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  color: #374151;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: all 0.15s ease-in-out;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.drop-down-content button:hover {
+  background-color: #f3f4f6d2;
+}
+
+.drop-down-content button:active {
+  background-color: #f3f4f6d2;
+}
+
+.drop-down-content button svg {
+  width: 1.1em;
+  height: 1.1em;
+  color: #4b5563;
+  flex-shrink: 0;
+}
+
+/* Animation */
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}

@@ -1,0 +1,6 @@
+
+.home-page-container {
+    background-color: var(--primary-bg-color);
+    height: 200vh;
+    width: 100vw;
+}

@@ -1,5 +1,5 @@
 package com.picksy.roomservice.request;
 
-public record RoomActionRequest(Long ownerId,
+public record RoomActionRequest(
                                 String roomCode) {
 }

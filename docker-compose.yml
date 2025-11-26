@@ -1,11 +1,23 @@
 version: "3.9"
 
 services:
+  # --- Frontend ---
+  frontend:
+    build:
+      context: ./Picksy-frontend
+      target: dev
+    ports:
+      - "${FRONTEND_PORT}:5173"
+    networks:
+      - client-network
+
   # --- Eureka Server ---
   eureka-server:
     build: ./eureka-server
     ports:
       - "${SERVER_PORT_EUREKASERVER}:8761"
+    networks:
+      - server-network
 
   # --- API Gateway ---
   api-gateway:
@@ -19,10 +31,17 @@ services:
       - auth-service
       - category-service
       - user-service
+    networks:
+      - server-network
+      - client-network
 
   # --- Auth Service ---
   auth-service:
-    build: ./auth-service
+    # The common-dto is needed for this service so context must be .
+    # in order to copy it
+    build:
+      context: .
+      dockerfile: ./auth-service/Dockerfile
     ports:
       - "${SERVER_PORT_AUTHSERVICE}:8080"
     environment:
@@ -30,8 +49,15 @@ services:
       - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER_AUTHSERVICE}
       - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD_AUTHSERVICE}
       - JWT_SECRET=${JWT_SECRET}
+      - SERVER_ADDRESS=0.0.0.0
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_SECRET_KEY=${GOOGLE_SECRET_KEY}
+      - EMAIL=${EMAIL}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
     depends_on:
       - auth-db
+    networks:
+      - server-network
 
   auth-db:
     image: postgres:14-alpine
@@ -44,6 +70,8 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD_AUTHSERVICE}
       - POSTGRES_USER=${POSTGRES_USER_AUTHSERVICE}
       - POSTGRES_DB=${POSTGRES_DB_AUTHSERVICE}
+    networks:
+      - server-network
 
 
   # --- Category Service ---
@@ -59,8 +87,11 @@ services:
       - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
       - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
       - CLOUDINARY_URL=${CLOUDINARY_URL}
+      - TMDB_TOKEN=${TMDB_READ_API_TOKEN}
     depends_on:
       - category-db
+    networks:
+      - server-network
 
   category-db:
     image: postgres:14-alpine
@@ -73,10 +104,14 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD_CATEGORYSERVICE}
       - POSTGRES_USER=${POSTGRES_USER_CATEGORYSERVICE}
       - POSTGRES_DB=${POSTGRES_DB_CATEGORYSERVICE}
+    networks:
+      - server-network
 
   # --- User Service ---
   user-service:
-    build: ./user-service
+    build:
+      context: .
+      dockerfile: ./user-service/Dockerfile
     ports:
       - "${SERVER_PORT_USERSERVICE}:8080"
     environment:
@@ -89,6 +124,8 @@ services:
       - CLOUDINARY_URL=${CLOUDINARY_URL}
     depends_on:
       - user-db
+    networks:
+      - server-network
 
   user-db:
     image: postgres:14-alpine
@@ -101,6 +138,8 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD_USERSERVICE}
       - POSTGRES_USER=${POSTGRES_USER_USERSERVICE}
       - POSTGRES_DB=${POSTGRES_DB_USERSERVICE}
+    networks:
+      - server-network
 
   room-service:
     build: ./room-service
@@ -110,9 +149,10 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://room-db:5432/${POSTGRES_DB_ROOMSERVICE}
       - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER_ROOMSERVICE}
       - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD_ROOMSERVICE}
-
     depends_on:
       - room-db
+    networks:
+      - server-network
 
   room-db:
     image: postgres:14-alpine
@@ -125,6 +165,8 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD_ROOMSERVICE}
       - POSTGRES_USER=${POSTGRES_USER_ROOMSERVICE}
       - POSTGRES_DB=${POSTGRES_DB_ROOMSERVICE}
+    networks:
+      - server-network
 
   decision-service:
     build: ./decision-service
@@ -134,9 +176,10 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://decision-db:5432/${POSTGRES_DB_DECISIONSERVICE}
       - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER_DECISIONSERVICE}
       - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD_DECISIONSERVICE}
-
     depends_on:
       - decision-db
+    networks:
+      - server-network
 
   decision-db:
     image: postgres:14-alpine
@@ -149,6 +192,8 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD_DECISIONSERVICE}
       - POSTGRES_USER=${POSTGRES_USER_DECISIONSERVICE}
       - POSTGRES_DB=${POSTGRES_DB_DECISIONSERVICE}
+    networks:
+      - server-network
 
   kafka:
     image: apache/kafka:latest
@@ -167,3 +212,12 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
       CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+    networks:
+      - server-network
+
+
+networks:
+  server-network:
+    driver: bridge
+  client-network:
+    driver: bridge

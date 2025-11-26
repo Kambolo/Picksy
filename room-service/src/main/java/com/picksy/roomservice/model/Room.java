@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -52,6 +53,9 @@ public class Room {
 
     @Column(name="current_category_idx")
     private int currentCategoryIndex = 0;
+
+    @Column(name="created_at")
+    private LocalDateTime createdAt;
 
     public Map.Entry<Long, String> addParticipant(Long id, String username){
         if(participants == null){

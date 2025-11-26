@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.apache.coyote.BadRequestException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -63,7 +64,7 @@ public class AuthController {
             @Parameter(description = "Email address to send the reset code") @RequestBody EmailRequest emailRequest
     ) throws BadRequestException {
         authService.sendResetPasswordEmail(emailRequest.email());
-        return ResponseEntity.ok(new MessageResponse("Email wysłany"));
+        return ResponseEntity.ok(new MessageResponse("Email has been sent"));
     }
 
     @Operation(
@@ -75,7 +76,7 @@ public class AuthController {
             @Parameter(description = "Reset code and associated email") @RequestBody CheckCodeBody checkCodeBody
     ) throws BadRequestException {
         authService.checkResetCode(checkCodeBody);
-        return ResponseEntity.ok(new MessageResponse("Kod poprawny"));
+        return ResponseEntity.ok(new MessageResponse("Code is valid"));
     }
 
     @Operation(
@@ -87,6 +88,6 @@ public class AuthController {
             @Parameter(description = "Password reset data including code and new password") @RequestBody ResetPasswordBody resetPasswordBody
     ) throws BadRequestException {
         authService.resetPassword(resetPasswordBody);
-        return ResponseEntity.ok(new MessageResponse("Hasło zmienione"));
+        return ResponseEntity.ok(new MessageResponse("Password reset successful"));
     }
 }

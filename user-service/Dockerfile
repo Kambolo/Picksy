@@ -1,7 +1,12 @@
 FROM maven:3.9.6-eclipse-temurin-21 AS build
 WORKDIR /app
-COPY pom.xml .
-COPY src ./src
+
+# --- skopiuj common-dto i zainstaluj ---
+COPY common-dto ./common-dto
+RUN cd common-dto && mvn -q clean install
+
+COPY user-service/pom.xml .
+COPY user-service/src ./src
 RUN mvn clean package -DskipTests
 
 FROM eclipse-temurin:21-jdk

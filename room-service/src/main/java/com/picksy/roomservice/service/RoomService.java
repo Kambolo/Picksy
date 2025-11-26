@@ -13,10 +13,10 @@ import org.apache.coyote.BadRequestException;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -27,15 +27,16 @@ public class RoomService {
   private final DecisionClient decisionClient;
 
   @Transactional
-  public RoomDTO createRoom(RoomCreateRequest request) {
+  public RoomDTO createRoom(RoomCreateRequest request, Long userId) {
     Room newRoom =
         Room.builder()
             .name(request.name())
             .roomCode(generateUniqueRoomCode())
-            .ownerId(request.ownerId())
+            .ownerId(userId)
             .categoryIds(request.categoryIds())
             .votingStarted(false)
             .roomClosed(false)
+            .createdAt(LocalDateTime.now())
             .build();
 
     roomRepository.save(newRoom);
@@ -47,7 +48,8 @@ public class RoomService {
         newRoom.isVotingStarted(),
         newRoom.isRoomClosed(),
         null,
-        newRoom.getOwnerId());
+        newRoom.getOwnerId(),
+        newRoom.getCreatedAt());
   }
 
   @Transactional
@@ -122,6 +124,7 @@ public class RoomService {
 
     if (currentCategoryIndex >= room.get().getCategoryIds().size()) {
       type = MessageType.VOTING_FINISHED;
+      room.get().setRoomClosed(true);
     } else {
       categoryId = room.get().getCategoryIds().get(currentCategoryIndex);
     }
@@ -132,7 +135,6 @@ public class RoomService {
 
     room.get().setCurrentCategoryIndex(currentCategoryIndex);
     roomRepository.save(room.get());
-    System.out.println(currentCategoryIndex);
   }
 
   @Transactional
@@ -148,6 +150,8 @@ public class RoomService {
     Map.Entry<Long, String> newParticipant =
         room.addParticipant(roomMessage.getUserId(), roomMessage.getUsername());
     System.out.println(roomMessage);
+
+    roomRepository.save(room);
 
     messagingTemplate.convertAndSend(
         "/topic/room/" + roomCode,
@@ -165,7 +169,8 @@ public class RoomService {
         room.get().isVotingStarted(),
         room.get().isRoomClosed(),
         room.get().getParticipants(),
-        room.get().getOwnerId());
+        room.get().getOwnerId(),
+        room.get().getCreatedAt());
   }
 
   private String generateUniqueRoomCode() {
@@ -195,6 +200,8 @@ public class RoomService {
     }
 
     room.removeParticipant(roomMessage.getUserId());
+    roomRepository.save(room);
+
     messagingTemplate.convertAndSend(
         "/topic/room/" + roomCode,
         new RoomMessage(MessageType.LEAVE, roomMessage.getUserId(), null, null));
@@ -218,9 +225,11 @@ public class RoomService {
   public List<PollDTO> getPolls(String roomCode) throws BadRequestException {
     // Get polls from decision service using synchronous communication (block)
     List<PollDTO> pollDTOS = decisionClient.getResults(roomCode).collectList().block();
+    System.out.println("DTOS: " + pollDTOS);
 
     // Get category ids from room service
     List<Long> categoryIds = roomRepository.findAllCategoryIdsByRoomCode(roomCode);
+    System.out.println("cat ids: " + categoryIds);
 
     // If room owner skipped voting for category it won't be in pollDTOS
     // If there is category id in categoryIds that isn't in pollDTOS add it and set its choices to
@@ -236,10 +245,11 @@ public class RoomService {
             new PollDTO(
                 null, // poll id is null because it doesn't exist yet
                 categoryId,
-                null // or an empty list
-                ));
+                null, // or an empty list,
+                0));
       }
     }
+    System.out.println("after: " + pollDTOS);
     return pollDTOS;
   }
 
@@ -247,5 +257,26 @@ public class RoomService {
     if (!roomRepository.existsByRoomCode(roomCode))
       throw new BadRequestException("Room does not exist.");
     return roomRepository.getParticipantsCountByRoomCode(roomCode);
+  }
+
+  public List<RoomDTO> getAllClosedRoomsForUser(Long userId) throws BadRequestException {
+    List<Room> rooms = roomRepository.findAllClosedByParticipant(userId);
+    System.out.println("rooms: " + rooms);
+    List<RoomDTO> roomDTOS = new ArrayList<>();
+
+    for (Room room : rooms) {
+      roomDTOS.add(
+          new RoomDTO(
+              room.getRoomCode(),
+              room.getName(),
+              room.getCategoryIds(),
+              room.isVotingStarted(),
+              room.isRoomClosed(),
+              room.getParticipants(),
+              room.getOwnerId(),
+              room.getCreatedAt()));
+    }
+
+    return roomDTOS;
   }
 }
