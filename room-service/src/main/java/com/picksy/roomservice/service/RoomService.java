@@ -14,8 +14,6 @@ import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.*;
 
 @Service
@@ -36,7 +34,7 @@ public class RoomService {
             .categoryIds(request.categoryIds())
             .votingStarted(false)
             .roomClosed(false)
-            .createdAt(LocalDateTime.now())
+            .createdAt(LocalDateTime.now().plusHours(1))
             .build();
 
     roomRepository.save(newRoom);

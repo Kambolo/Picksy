@@ -1,13 +1,13 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import Navbar from "../../components/Navbar/Navbar";
 import CategoryList from "../../components/CategoryList/CategoryList";
+import Navbar from "../../components/Navbar/Navbar";
 import PageNavigation from "../../components/PageNavigation/PageNavigation";
-import "./CategoryPage.css";
 import { useUser } from "../../context/userContext";
 import { useCategoryData } from "../../hooks/useCategoryData";
-import { usePaginationAndSort } from "../../hooks/usePaginationAndSort";
 import { useCategorySelection } from "../../hooks/useCategorySelection";
+import { usePaginationAndSort } from "../../hooks/usePaginationAndSort";
+import "./CategoryPage.css";
 
 export const CategoryPage = () => {
   const navigate = useNavigate();

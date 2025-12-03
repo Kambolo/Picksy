@@ -1,28 +1,44 @@
 package com.picksy.apigateway.controller;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import reactor.core.publisher.Mono;
 
 @RestController
 public class FallbackController{
     @RequestMapping("/fallback/user")
-    public Mono<String> userFallback() {
-        return Mono.just("{\"error\": \"User service is not available!\"}");
+    public ResponseEntity<String> userFallback() {
+        return ResponseEntity
+                .status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body("User Service is unavailable. Please try again later.");
     }
 
     @RequestMapping("/fallback/room")
-    public Mono<String> roomFallback() {
-        return Mono.just("{\"error\": \"Room service is not available!\"}");
+    public ResponseEntity<String> roomFallback() {
+        return ResponseEntity
+                .status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body("Room Service is unavailable. Please try again later.");
     }
 
     @RequestMapping("/fallback/auth")
-    public Mono<String> authFallback() {
-        return Mono.just("{\"error\": \"Auth service is not available!\"}");
+    public ResponseEntity<String> authFallback() {
+        return ResponseEntity
+                .status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body("Auth Service is unavailable. Please try again later.");
     }
 
     @RequestMapping("/fallback/decision")
-    public Mono<String> decisionFallback() {
-        return Mono.just("{\"error\": \"Decision service is not available!\"}");
+    public ResponseEntity<String> decisionFallback() {
+        return ResponseEntity
+                .status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body("Decision Service is unavailable. Please try again later.");
+    }
+
+    @RequestMapping("/fallback/category")
+    public ResponseEntity<String> categoryFallback() {
+        return ResponseEntity
+                .status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body("Category Service is unavailable. Please try again later.");
     }
 }

@@ -54,8 +54,8 @@ export function setCategoryImage(catId: number, file: File) {
   formData.append("image", file);
 
   return apiRequest(
-    `api/category/secure/image/${catId}`,
-    "PATCH",
+    `api/category/secure/${catId}/image`,
+    "POST",
     true,
     true,
     formData

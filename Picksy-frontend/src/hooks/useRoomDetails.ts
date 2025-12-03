@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
-import type { Participant } from "../types/Participant";
-import { getRoomDetails } from "../api/roomApi";
-import fetchPhotoUrl from "./useUserPhotoUrlProvider";
-import { useUser } from "../context/userContext";
 import { useNavigate } from "react-router-dom";
+import { getRoomDetails } from "../api/roomApi";
+import type { Participant } from "../types/Participant";
+import fetchPhotoUrl from "./useUserPhotoUrlProvider";
 
 interface UseRoomDetailsReturn {
   participants: Participant[];
@@ -54,8 +53,8 @@ export function useRoomDetails(roomCode?: string): UseRoomDetailsReturn {
 
         setParticipants(participantsArray);
         setOwnerId(response.result.ownerId);
-      } catch (err) {
-        setError("Błąd podczas pobierania danych pokoju");
+      } catch (e) {
+        setError("Błąd podczas pobierania danych pokoju: " + e);
       } finally {
         setIsLoading(false);
       }

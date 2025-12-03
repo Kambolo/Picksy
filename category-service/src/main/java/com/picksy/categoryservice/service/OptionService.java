@@ -28,7 +28,7 @@ public class OptionService {
   private final FileUploadService fileUploadService;
 
   private final String DEFAULT_PHOTO_URL =
-      "https://res.cloudinary.com/dctiucda1/image/upload/v1763999959/image_wyuk0p.png";
+      "https://res.cloudinary.com/dctiucda1/image/upload/v1764698183/image_zaopfn.png";
 
   public Option findById(Long id) throws BadRequestException {
     return optionRepository

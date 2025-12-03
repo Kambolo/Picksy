@@ -42,7 +42,7 @@ const RoomPage = () => {
   // voting finished
   if (showResults) {
     if (isBlocked) confirmNavigation(false);
-    votingProps.isOwner && closeRoom(roomCode);
+    if (votingProps.isOwner) closeRoom(roomCode);
     navigate(`room/${roomCode}/results`);
   }
 

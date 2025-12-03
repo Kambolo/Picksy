@@ -1,7 +1,7 @@
 import { getProfile } from "../api/profileApi";
 
 export const DEFAULT_PHOTO_URL =
-  "https://res.cloudinary.com/dctiucda1/image/upload/v1760449592/default.png";
+  "https://res.cloudinary.com/dctiucda1/image/upload/v1764165461/default_wm1msb.png";
 
 async function fetchPhotoUrl(id: number | null): Promise<string> {
   if (!id || id <= 0) return DEFAULT_PHOTO_URL;

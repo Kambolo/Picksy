@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import type { Room } from "../../types/Room";
 import RoomCard from "../RoomCard/RoomCard";
 

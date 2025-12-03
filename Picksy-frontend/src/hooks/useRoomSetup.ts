@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createRoom } from "../api/roomApi";
-import { useCategories } from "./useCategories";
 import { useUser } from "../context/userContext";
+import { useCategories } from "./useCategories";
 
 export const useRoomSetup = () => {
   const { user } = useUser();
@@ -52,7 +52,7 @@ export const useRoomSetup = () => {
         setError("Wystąpił błąd przy tworzeniu pokoju");
       }
     } catch (e) {
-      setError("Wystąpił nieoczekiwany błąd");
+      setError("Wystąpił nieoczekiwany błąd: " + e);
     }
   };
 

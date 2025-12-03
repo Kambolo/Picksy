@@ -30,6 +30,7 @@ export const useProfileData = (userId: number | null) => {
             avatarUrl: responseProfile.result?.avatarUrl ?? "",
             bio: responseProfile.result?.bio ?? "",
             isBlocked: responseUser.result.isBlocked,
+            role: responseUser.result?.role ?? "USER",
           });
         } else {
           if (responseProfile.error) setError(responseProfile.error);

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { getUsers } from "../api/authApi";
-import type { UserProfile } from "../types/UserProfile";
-import type { User } from "../types/User";
+import type { Profile, User, UserProfile } from "../types/UserProfile";
 import { getProfiles } from "../api/profileApi";
 
 const PAGE_SIZE = 10;
@@ -49,20 +48,21 @@ export const useUsersData = (
 
     const profileResponse = await getProfiles(usersIds);
 
-    console.log(profileResponse);
-
     if (profileResponse.status !== 200) {
       setIsLoading(false);
       setError("Wystapił błąd podczas pobierania użytkowników");
       return;
     }
 
-    const userProfile: UserProfile[] = usersFromApi.map((user) => {
-      const profile = profileResponse.result.find(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (profile: any) => profile.userId === user.id
+    const userProfile: UserProfile[] = usersFromApi.map((user: User) => {
+      const profile: Profile = profileResponse.result.find(
+        (profile: Profile) => profile.userId === user.id
       );
-      return { ...user, avatarUrl: profile.avatarUrl, bio: profile.bio };
+      return {
+        ...user,
+        avatarUrl: profile.avatarUrl,
+        bio: profile.bio,
+      };
     });
 
     console.log("users - " + usersFromApi);

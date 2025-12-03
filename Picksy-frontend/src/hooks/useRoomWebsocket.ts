@@ -24,7 +24,6 @@ const useRoomWebsocket = (
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [message, setMessage] = useState<string>("");
   const stompClientRef = useRef<Client | null>(null);
 
   useEffect(() => {
@@ -88,12 +87,6 @@ const useRoomWebsocket = (
     if (!stompClient || !isConnected) {
       return;
     }
-
-    const message: RoomMessage = {
-      userId,
-      username,
-      type: "LEAVE",
-    };
 
     if (stompClient && stompClient.connected) {
       const message: RoomMessage = {

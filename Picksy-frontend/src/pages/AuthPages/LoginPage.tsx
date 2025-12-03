@@ -27,6 +27,7 @@ function LoginPage() {
             username: response.result.username,
             email: response.result.email,
             role: response.result.role,
+            isBlocked: false,
           });
           navigate("/");
           break;

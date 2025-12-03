@@ -18,15 +18,19 @@ const RoomCard: React.FC<RoomCardProps> = ({
     : 0;
 
   const formatDate = (dateString: string) => {
+    console.log(dateString);
     const date = new Date(dateString);
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - date.getTime());
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+
     if (diffDays === 0) {
-      return "Dzisiaj o " + date.getHours() + ":" + date.getMinutes();
+      return `Dzisiaj o ${hours}:${minutes}`;
     } else if (diffDays === 1) {
-      return "Wczoraj o " + date.getHours() + ":" + date.getMinutes();
+      return `Wczoraj o ${hours}:${minutes}`;
     } else if (diffDays < 7) {
       return `${diffDays} dni temu`;
     } else {

@@ -12,7 +12,7 @@ const CategoryDetailsPage: React.FC = () => {
   const { id } = useParams();
   const { user } = useUser();
 
-  const { category, loading, setLoading, fetchCategoryData } =
+  const { category, loading, setLoading, fetchCategoryData, error } =
     useCategoryDetailsData(parseInt(id || "-1"));
   const {
     isEditing,
@@ -36,13 +36,13 @@ const CategoryDetailsPage: React.FC = () => {
     );
   }
 
-  if (!category) {
+  if (!category || error) {
     return (
       <>
         <Navbar />
-        <div className="category-details-container">
-          <div className="error-message-details">
-            <h2>Kategoria nie odnaleziona.</h2>
+        <div className="category-container">
+          <div className="error-message">
+            <h2>{error || "Kategoria nie odnaleziona."}</h2>
           </div>
         </div>
       </>

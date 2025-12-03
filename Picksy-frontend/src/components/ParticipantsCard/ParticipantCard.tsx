@@ -1,9 +1,8 @@
-import { Users } from "lucide-react";
 import React from "react";
-import ParticipantList from "../ParticipantsList/ParicipantList";
-import ParticipantsHeader from "../ParticipantsHeader/ParticipantsHeader";
-import "./ParcitipantCard.css";
 import type { Participant } from "../../types/Participant";
+import ParticipantsHeader from "../ParticipantsHeader/ParticipantsHeader";
+import ParticipantList from "../ParticipantsList/ParicipantList";
+import "./ParcitipantCard.css";
 
 type ParticipantCardProp = {
   participants: Participant[];

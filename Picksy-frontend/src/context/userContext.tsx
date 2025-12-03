@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { getUserFromCookies } from "../api/authApi";
-import type { User } from "../types/User";
+import type { User } from "../types/UserProfile";
 
 type UserContextType = {
   user: User | null;

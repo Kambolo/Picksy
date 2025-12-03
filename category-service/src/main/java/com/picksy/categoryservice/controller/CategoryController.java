@@ -42,7 +42,7 @@ public class CategoryController {
     }
 
     @Operation(summary = "Upload an image for a category", description = "Adds an image to an existing category by category ID.")
-    @PatchMapping(value = "/secure/image/{catId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/secure/{catId}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> addCategoryImage(
             @RequestHeader("X-User-Id") Long userId,
             @RequestHeader("X-User-Role") String role,
@@ -194,7 +194,7 @@ public class CategoryController {
             summary = "Delete a category image",
             description = "Removes the image associated with a category by ID."
     )
-    @DeleteMapping("/secure/image/{catId}")
+    @DeleteMapping("/secure/{catId}/image")
     public ResponseEntity<String> deleteCategoryImage(
             @RequestHeader("X-User-Id") Long userId,
             @RequestHeader("X-User-Role") String role,

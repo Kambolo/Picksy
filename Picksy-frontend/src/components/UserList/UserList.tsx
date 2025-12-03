@@ -19,7 +19,15 @@ const UsersList: React.FC<UserListProps> = ({
         {[1, 2, 3, 4, 5].map((i) => (
           <UserCard
             key={i}
-            user={{ id: -1, username: "", email: "", avatarUrl: "", bio: "" }}
+            user={{
+              id: -1,
+              username: "",
+              email: "",
+              avatarUrl: "",
+              bio: "",
+              isBlocked: false,
+              role: "USER",
+            }}
             onClick={() => {}}
             isLoading={true}
           />

@@ -158,6 +158,7 @@ public class CategoryService {
   public void remove(Long userId, String role, Long id)
       throws BadRequestException, FileUploadException, MalformedURLException {
     Category category = findById(id);
+      System.out.println("Znalazło");
 
     checkAuthor(userId, role, category);
 
@@ -172,6 +173,7 @@ public class CategoryService {
     removeImg(userId, role, id);
 
     categoryRepository.delete(category);
+    System.out.println("Przeszlo");
   }
 
   @Transactional

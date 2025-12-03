@@ -7,6 +7,9 @@ spring:
     gateway:
       server:
         webflux:
+          httpclient:
+            connect-timeout: 12000
+            response-timeout: 12s
           globalcors:
             corsConfigurations:
               '[/auth/**]':
@@ -40,41 +43,42 @@ spring:
               uri: lb://AUTH-SERVICE
               predicates:
                 - Path=/auth/**, /auth-service/v3/api-docs, /oauth2/**, /login/**
-              filters:
-                - name: CircuitBreaker
-                  args:
-                    name: authCircuitBreaker
-                    fallbackUri: forward:/fallback/auth
+#              filters:
+#                - name: CircuitBreaker
+#                  args:
+#                    name: authCircuitBreaker
+#                    fallbackUri: forward:/fallback/auth
 
             - id: user-service
               uri: lb://USER-SERVICE
               predicates:
                 - Path=/api/profile/**, /user-service/v3/api-docs
-              filters:
-                - name: CircuitBreaker
-                  args:
-                    name: userCircuitBreaker
-                    fallbackUri: forward:/fallback/user
+#              filters:
+#                - name: CircuitBreaker
+#                  args:
+#                    name: userCircuitBreaker
+#                    fallbackUri: forward:/fallback/user
 
             - id: category-service
               uri: lb://CATEGORY-SERVICE
               predicates:
                 - Path=/api/category/**, /api/option/**, /category-service/v3/api-docs, /category-service/swagger-ui/**
-              filters:
-                - name: CircuitBreaker
-                  args:
-                    name: categoryCircuitBreaker
-                    fallbackUri: forward:/fallback/category
+#              filters:
+#                - name: CircuitBreaker
+#                  args:
+#                    name: categoryCircuitBreaker
+#                    fallbackUri: forward:/fallback/category
+
 
             - id: room-service
               uri: lb://ROOM-SERVICE
               predicates:
                 - Path=/api/room/**, /room-service/v3/api-docs
-              filters:
-                - name: CircuitBreaker
-                  args:
-                    name: roomCircuitBreaker
-                    fallbackUri: forward:/fallback/room
+#              filters:
+#                - name: CircuitBreaker
+#                  args:
+#                    name: roomCircuitBreaker
+#                    fallbackUri: forward:/fallback/room
 
             - id: room-ws
               uri: lb:ws://ROOM-SERVICE
@@ -84,12 +88,12 @@ spring:
             - id: decision-service
               uri: lb://DECISION-SERVICE
               predicates:
-                - Path=/api/room/**, /room-service/v3/api-docs
-              filters:
-                - name: CircuitBreaker
-                  args:
-                    name: decisionCircuitBreaker
-                    fallbackUri: forward:/fallback/decision
+                - Path=/api/decision/**, /decision-service/v3/api-docs
+#              filters:
+#                - name: CircuitBreaker
+#                  args:
+#                    name: decisionCircuitBreaker
+#                    fallbackUri: forward:/fallback/decision
 
             - id: decision-ws
               uri: lb:ws://DECISION-SERVICE
@@ -121,19 +125,23 @@ resilience4j:
     configs:
       default:
         failureRateThreshold: 50
-        waitDurationInOpenState: 50s
+        waitDurationInOpenState: 30s
         slidingWindowType: COUNT_BASED
         slidingWindowSize: 10
         minimumNumberOfCalls: 20
         permittedNumberOfCallsInHalfOpenState: 3
+        slowCallDurationThreshold: 10s
+        slowCallRateThreshold: 100
 
       configForServiceWithImageUpload:
-        failureRateThreshold: 50
-        waitDurationInOpenState: 80s
+        failureRateThreshold: 80
+        waitDurationInOpenState: 30s
         slidingWindowType: COUNT_BASED
         slidingWindowSize: 10
-        minimumNumberOfCalls: 20
+        minimumNumberOfCalls: 60
         permittedNumberOfCallsInHalfOpenState: 3
+        slowCallDurationThreshold: 120s
+        slowCallRateThreshold: 80
 
     instances:
       authCircuitBreaker:
@@ -156,3 +164,17 @@ eureka:
   client:
     service-url:
       defaultZone: http://eureka-server:8761/eureka/
+
+management:
+  health:
+    circuit breakers:
+      enabled: true
+
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+
+  endpoint:
+    health:
+      show-details: always

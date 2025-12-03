@@ -7,22 +7,26 @@ import type { Option } from "../types/Option";
 const useCategoryDetailsData = (id: number) => {
   const [category, setCategory] = useState<CategoryDetails | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const fetchCategoryData = async () => {
     try {
       if (!id) return;
+      setLoading(true);
       const responseCategory = await getCategory(id);
       if (responseCategory.status !== 200) {
-        console.error("Wystapił problem podczas pobierania danych o kategorii");
-        return;
+        throw new Error(
+          "Wystapił problem podczas pobierania danych o kategorii"
+        );
       }
 
       let author = "Picksy";
       if (responseCategory.result.authorID) {
         const responseUser = await getUser(responseCategory.result.authorID);
         if (responseUser.status !== 200) {
-          console.error("Wystapił problem podczas pobierania danych o autorze");
-          return;
+          throw new Error(
+            "Wystapił problem podczas pobierania danych o autorze"
+          );
         }
         author = responseUser.result.username;
       }
@@ -49,7 +53,7 @@ const useCategoryDetailsData = (id: number) => {
         options.forEach((opt) => {
           if (!opt.photoURL) {
             opt.photoURL =
-              "https://res.cloudinary.com/dctiucda1/image/upload/v1760881210/image_oetxkk.png";
+              "https://res.cloudinary.com/dctiucda1/image/upload/v1764698183/image_zaopfn.png";
           }
         });
       }
@@ -58,9 +62,9 @@ const useCategoryDetailsData = (id: number) => {
 
       setCategory(categoryData);
       setLoading(false);
-    } catch (error) {
-      console.error("Error fetching data:", error);
+    } catch (er: any) {
       setLoading(false);
+      setError(er?.message);
     }
   };
 
@@ -73,6 +77,7 @@ const useCategoryDetailsData = (id: number) => {
     loading,
     setLoading,
     fetchCategoryData,
+    error,
   };
 };
 

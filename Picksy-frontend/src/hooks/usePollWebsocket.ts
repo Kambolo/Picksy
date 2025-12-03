@@ -29,7 +29,6 @@ const usePollWebsocket = (
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [message, setMessage] = useState<string>("");
   const stompClientRef = useRef<Client | null>(null);
 
   useEffect(() => {
