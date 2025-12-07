@@ -9,6 +9,6 @@ export type MessageType =
 export type RoomMessage = {
   userId: number | null;
   username: string;
-  categoryId?: number;
+  category?: { setId: number; categoryId: number };
   type: MessageType;
 };

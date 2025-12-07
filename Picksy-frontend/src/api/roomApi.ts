@@ -1,9 +1,12 @@
 import { apiRequest } from "./apiRequest";
 
-export function createRoom(name: string, categoryIds: number[]) {
+export function createRoom(
+  name: string,
+  categorySets: { setId: number; categoryId: number }[]
+) {
   return apiRequest("api/room/secure/create", "POST", true, false, {
     name,
-    categoryIds,
+    categories: categorySets,
   });
 }
 

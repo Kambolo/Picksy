@@ -27,6 +27,21 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("File not found: " + e.getMessage());
     }
 
+    @ExceptionHandler(ForbiddenAccessException.class)
+    public ResponseEntity<String> handleForbiddenAccessException(ForbiddenAccessException e){
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Forbidden access: " + e.getMessage());
+    }
+
+    @ExceptionHandler(InvalidRequestException.class)
+    public ResponseEntity<String> invalidRequestException(InvalidRequestException e){
+        return ResponseEntity.status(400).body("Invalid request: " + e.getMessage());
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<String> handleResourceNotFoundException(ResourceNotFoundException e){
+        return ResponseEntity.status(404).body("Resource not found: " + e.getMessage());
+    }
+
     @ExceptionHandler(MalformedURLException.class)
     public ResponseEntity<String> handleMalformedURLException(MalformedURLException e){
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Malformed Url: " + e.getMessage());

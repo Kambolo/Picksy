@@ -23,6 +23,10 @@ export const usePaginationAndSort = () => {
   const [searchValue, setSearchValue] = useState("");
   const [debouncedSearchValue, setDebouncedSearchValue] = useState("");
 
+  const [activeView, setActiveView] = useState<"kategorie" | "zestawy">(
+    "kategorie"
+  );
+
   // Handle sort change
   const handleSortChange = (sort: SortOption) => {
     const sortConfig = SORT_MAPPING[sort];
@@ -56,6 +60,16 @@ export const usePaginationAndSort = () => {
     []
   );
 
+  const handleActiveViewChange = (view: "kategorie" | "zestawy") => {
+    setActiveView(view);
+  };
+
+  useEffect(() => {
+    setCurrentPage(1);
+    setCurrentSortBy("views");
+    setAscending(false);
+  }, [activeView]);
+
   return {
     // Pagination
     currentPage,
@@ -71,5 +85,9 @@ export const usePaginationAndSort = () => {
     searchValue,
     debouncedSearchValue,
     handleInputChange,
+
+    //activeView
+    activeView,
+    handleActiveViewChange,
   };
 };

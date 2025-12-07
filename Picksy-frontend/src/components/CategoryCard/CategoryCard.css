@@ -274,6 +274,12 @@
   right: 8rem;
   bottom: 0;
 }
+
+.card-delete {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+}
 /* Responsive Design */
 @media only screen and (max-width: 1200px) {
   .category-image-container img,

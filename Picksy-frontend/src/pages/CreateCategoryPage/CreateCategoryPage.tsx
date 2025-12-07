@@ -10,11 +10,12 @@ import type {
 } from "../../types/CategoryDetails";
 import "./CreateCategoryPage.css";
 
-interface CreateCategoryPageProps {
+export interface CreateCategoryPageProps {
   editMode?: boolean;
   categoryData?: CategoryDetails;
   onCancel?: () => void;
   onSave?: () => void;
+  setCreatedCategory?: (id: number) => void;
 }
 
 const CreateCategoryPage: React.FC<CreateCategoryPageProps> = ({
@@ -22,6 +23,7 @@ const CreateCategoryPage: React.FC<CreateCategoryPageProps> = ({
   categoryData,
   onCancel,
   onSave,
+  setCreatedCategory,
 }) => {
   const types: CategoryType[] = ["PICK", "SWIPE"];
   const [selectedType, setSelectedType] = useState<CategoryType>(
@@ -58,7 +60,8 @@ const CreateCategoryPage: React.FC<CreateCategoryPageProps> = ({
     editMode,
     categoryData?.id,
     onSave,
-    categoryData?.options
+    categoryData?.options,
+    setCreatedCategory
   );
 
   const handleFormSubmit = async (e: React.FormEvent) => {

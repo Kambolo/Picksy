@@ -22,6 +22,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
     private final List<String> publicPaths = List.of(
             "/auth/",
             "/api/category/public",
+            "/api/category-set/public",
             "/api/option/public",
             "/api/profile/public",
             "/api/room/public",

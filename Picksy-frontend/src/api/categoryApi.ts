@@ -149,3 +149,104 @@ export function deleteCategory(catId: number) {
 export function deleteOptionImage(optId: number) {
   return apiRequest(`api/option/secure/image/${optId}`, "DELETE", true);
 }
+
+export function createSet(
+  name: string,
+  categoryIds: number[],
+  isPublic: boolean
+) {
+  return apiRequest(`api/category-set/secure`, "POST", true, false, {
+    name,
+    categoryIds,
+    isPublic,
+  });
+}
+
+export function addCategoryToSet(setId: number, catId: number) {
+  return apiRequest(`api/category-set/secure/add`, "PATCH", true, false, {
+    setId,
+    categoryId: catId,
+  });
+}
+
+export function removeCategoryFromSet(setId: number, catId: number) {
+  return apiRequest(`api/category-set/secure/remove`, "PATCH", true, false, {
+    setId,
+    categoryId: catId,
+  });
+}
+
+export function deleteSet(setId: number) {
+  return apiRequest(`api/category-set/secure/${setId}`, "DELETE", true);
+}
+
+export function getSetById(setId: number) {
+  return apiRequest(`api/category-set/public/${setId}`);
+}
+
+export function getPublicSetsByAuthorId(
+  authorId: number,
+  page?: number,
+  size?: number,
+  sortBy?: string,
+  ascending?: boolean
+) {
+  const params = new URLSearchParams();
+
+  if (page) params.append("page", String(page - 1));
+  if (size) params.append("size", String(size));
+  if (sortBy) params.append("sortBy", sortBy);
+  if (ascending !== undefined) params.append("ascending", String(ascending));
+
+  const base = `api/category-set/public/author/${authorId}`;
+  return apiRequest(`${base}${params.toString()}`);
+}
+
+export function getAllSetsByAuthorId(
+  authorId: number,
+  page?: number,
+  size?: number,
+  sortBy?: string,
+  ascending?: boolean,
+  pattern?: string
+) {
+  const params = new URLSearchParams();
+
+  if (page) params.append("page", String(page - 1));
+  if (size) params.append("size", String(size));
+  if (sortBy) params.append("sortBy", sortBy);
+  if (ascending !== undefined) params.append("ascending", String(ascending));
+  if (pattern) params.append("pattern", pattern);
+
+  const base = pattern
+    ? `api/category-set/secure/search/author/${authorId}?`
+    : `api/category-set/secure/author/${authorId}?`;
+
+  return apiRequest(`${base}${params.toString()}`, "GET", true);
+}
+
+export function getAllPublicSets(
+  page?: number,
+  size?: number,
+  sortBy?: string,
+  ascending?: boolean,
+  pattern?: string
+) {
+  const params = new URLSearchParams();
+
+  if (page) params.append("page", String(page - 1));
+  if (size) params.append("size", String(size));
+  if (sortBy) params.append("sortBy", sortBy);
+  if (ascending !== undefined) params.append("ascending", String(ascending));
+  if (pattern) params.append("pattern", pattern);
+
+  const base = pattern
+    ? `api/category-set/public/search?`
+    : `api/category-set/public?`;
+
+  return apiRequest(`${base}${params.toString()}`);
+}
+
+export function increaseSetViews(setId: number) {
+  return apiRequest(`api/category-set/public/${setId}/views`, "PATCH");
+}

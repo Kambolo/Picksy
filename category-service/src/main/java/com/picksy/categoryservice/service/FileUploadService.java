@@ -45,29 +45,23 @@ public class FileUploadService {
     }
 
     public String extractPublicIdFromURL(String url) throws MalformedURLException {
-        // Remove version and domain prefix
-        // Example input: https://res.cloudinary.com/demo/image/upload/v1680000000/folder/my-image.jpg
-
         try {
             URI uri = new URI(url);
-            String path = uri.getPath(); // /<version>/folder/my-image.jpg
+            String path = uri.getPath();
 
-            // Remove leading parts like /<version>/...
-            // Path pattern: /image/upload/v1680000000/folder/my-image.jpg
             int uploadIndex = path.indexOf("/upload/");
             if (uploadIndex == -1) throw new IllegalArgumentException("Invalid Cloudinary URL");
 
             String afterUpload = path.substring(uploadIndex + "/upload/".length());
 
-            // Remove version if present
             String[] parts = afterUpload.split("/");
             if (parts[0].startsWith("v")) {
-                parts = Arrays.copyOfRange(parts, 1, parts.length); // skip version
+                parts = Arrays.copyOfRange(parts, 1, parts.length);
             }
 
-            // Join remaining parts and remove file extension
+
             String withExtension = String.join("/", parts);
-            return withExtension.replaceAll("\\.(jpg|jpeg|png|gif)$", ""); // remove extension
+            return withExtension.replaceAll("\\.(jpg|jpeg|png|gif)$", "");
 
         } catch (URISyntaxException e) {
             throw new MalformedURLException("Malformed URL " + e.getMessage());

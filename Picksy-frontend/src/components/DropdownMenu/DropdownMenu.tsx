@@ -43,7 +43,6 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({ title, items }) => {
     setIsOpen(false);
   };
 
-  // If there's only one item, render as a direct link or button
   if (isSingleItem) {
     const item = items[0];
 

@@ -54,7 +54,7 @@ public class ProfileService {
   }
 
   private String uploadGoogleAvatarToClaudinary(String avatarUrl, Long userId) {
-      String finalAvatarUrl = "https://res.cloudinary.com/dctiucda1/image/upload/v1760520939/default.png";
+      String finalAvatarUrl = "https://res.cloudinary.com/dctiucda1/image/upload/v1764165461/default_wm1msb.png";
       RestTemplate restTemplate = new RestTemplate();
 
       if (avatarUrl != null) {

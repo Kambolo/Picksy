@@ -1,8 +1,10 @@
 package com.picksy.categoryservice.exception;
 
-public class FileUploadException extends Exception{
-
-    public FileUploadException(String msg){
-        super(msg);
+public class FileUploadException extends RuntimeException {
+    public FileUploadException(String message, Throwable cause) {
+        super(message, cause);
+    }
+    public FileUploadException(String message) {
+        super(message);
     }
 }

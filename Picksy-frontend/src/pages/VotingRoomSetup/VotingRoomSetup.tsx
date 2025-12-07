@@ -16,7 +16,9 @@ const VotingRoomSetup: React.FC = () => {
     roomName,
     setRoomName,
     categories,
+    sets,
     removeCategory,
+    removeSet,
     handleCreateRoom,
     error,
   } = useRoomSetup();
@@ -97,6 +99,8 @@ const VotingRoomSetup: React.FC = () => {
                 categoryListProps={categories}
                 isLoading={false}
                 onCardClick={removeCategory}
+                onSetClick={removeSet}
+                showSet={true}
               />
               <p className="remove-hint">Kliknij kartę, aby usunąć z listy</p>
             </div>

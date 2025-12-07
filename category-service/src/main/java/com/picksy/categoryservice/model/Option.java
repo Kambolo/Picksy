@@ -18,11 +18,9 @@ public class Option {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name="cat_id")
     private Category category;
 
     private String name;
 
-    @Column(name = "photo_url")
     private String photoUrl;
 }

@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { getCategory, getCategoryOptions } from "../api/categoryApi";
+import {
+  getCategory,
+  getCategoryOptions,
+  getSetById,
+} from "../api/categoryApi";
 import { endVoting, nextCategory, startVoting } from "../api/roomApi";
 import { useUser } from "../context/userContext";
 import type { Option } from "../types/Option";
@@ -11,6 +15,7 @@ import { useNavigationBlocker } from "./useNavigationBloker";
 import { useRoomDetails } from "./useRoomDetails";
 import useRoomWebSocket from "./useRoomWebsocket";
 import fetchPhotoUrl from "./useUserPhotoUrlProvider";
+import type { SetInfo } from "../types/Set";
 
 export const useRoomPageLogic = () => {
   const { roomCode } = useParams<{ roomCode: string }>();
@@ -28,6 +33,7 @@ export const useRoomPageLogic = () => {
 
   const [categoryId, setCategoryId] = useState(-1);
   const [currentCategory, setCurrentCategory] = useState<Category | null>(null);
+  const [currentSet, setCurrentSet] = useState<SetInfo | null>(null);
   const [isLoadingCategory, setIsLoadingCategory] = useState(false);
   const [showResults, setShowResults] = useState(false);
 
@@ -78,6 +84,7 @@ export const useRoomPageLogic = () => {
       setIsRoomClosed(saved.isRoomClosed);
       setCurrentCategoryIndex(saved.currentCategoryIndex);
       setFinalParticipants(saved.finalParticipants);
+      setCurrentSet(saved.set);
       setFirstRender(false);
     }
     setIsRestoring(false);
@@ -98,6 +105,7 @@ export const useRoomPageLogic = () => {
         isRoomClosed,
         currentCategoryIndex,
         finalParticipants,
+        currentSet,
       });
     }
   }, [
@@ -109,6 +117,7 @@ export const useRoomPageLogic = () => {
     isRoomClosed,
     currentCategoryIndex,
     finalParticipants,
+    currentSet,
   ]);
 
   // WebSocket
@@ -148,12 +157,14 @@ export const useRoomPageLogic = () => {
 
       case "VOTING_STARTED":
       case "NEXT_CATEGORY":
-        if (!message.categoryId) break;
+        if (!message.category) break;
         clearState(`votingState-${roomCode}-${categoryIdRef.current}`);
         clearState(`swipeVoting-${roomCode}-${categoryIdRef.current}`);
         clearState(`pickVoting-${roomCode}-${categoryIdRef.current}`);
-        setCategoryId(message.categoryId);
-        loadCategory(message.categoryId);
+        setCategoryId(message.category.categoryId);
+        loadCategory(message.category.categoryId);
+        if (message.category.setId !== -1) loadSet(message.category.setId);
+        else setCurrentSet(null);
         if (message.type === "NEXT_CATEGORY")
           setCurrentCategoryIndex((prev) => prev + 1);
         break;
@@ -253,6 +264,17 @@ export const useRoomPageLogic = () => {
     setIsLoadingCategory(false);
   };
 
+  const loadSet = async (setId: number) => {
+    if (currentSet && currentSet.id === setId) return;
+    setIsLoadingCategory(true);
+    const response = await getSetById(setId);
+    if (response.status === 200) {
+      setCurrentSet({ ...response.result });
+    } else {
+      setError("Błąd podczas wczytywania zestawu.");
+    }
+  };
+
   // join on load and only if it is the first render skip refresh
   useEffect(() => {
     if (isRestoring) return;
@@ -283,6 +305,7 @@ export const useRoomPageLogic = () => {
 
     votingProps: {
       category: currentCategory,
+      set: currentSet,
       roomCode,
       isOwner: participant?.id === ownerId,
       participantsCount: finalParticipants.length,

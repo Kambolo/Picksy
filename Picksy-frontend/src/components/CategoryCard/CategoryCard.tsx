@@ -4,6 +4,7 @@ import "./CategoryCard.css";
 import { FaLock, FaLockOpen } from "react-icons/fa6";
 import { Link } from "react-router-dom";
 import { useCategoryUI } from "../../hooks/useCategoryUIContext";
+import type { SetInfo } from "../../types/Set";
 
 export type CategoryCardProps = {
   id: number;
@@ -16,6 +17,7 @@ export type CategoryCardProps = {
   isPublic: boolean;
   showIsPublic?: boolean;
   views: number;
+  set?: Omit<SetInfo, "categories">;
 };
 
 type CategoryCardComponentProps = CategoryCardProps & {
@@ -23,6 +25,9 @@ type CategoryCardComponentProps = CategoryCardProps & {
   onClick?: () => void;
   onChange?: (id: number, e: React.ChangeEvent<HTMLInputElement>) => void;
   selectedCategories?: CategoryCardProps[];
+  showRemove?: boolean;
+  handleRemove?: (id: number) => void;
+  canSelect?: boolean;
 };
 
 const CategoryCard: React.FC<CategoryCardComponentProps> = ({
@@ -40,6 +45,9 @@ const CategoryCard: React.FC<CategoryCardComponentProps> = ({
   onClick,
   onChange,
   selectedCategories,
+  showRemove,
+  handleRemove,
+  canSelect,
 }) => {
   const { isAddCategoryOpen } = useCategoryUI();
 
@@ -71,7 +79,7 @@ const CategoryCard: React.FC<CategoryCardComponentProps> = ({
 
   return (
     <div className="category-card-container" onClick={onClick}>
-      {isAddCategoryOpen && (
+      {isAddCategoryOpen && canSelect && (
         <div
           className="add-category-checkbox"
           onClick={(e) => e.stopPropagation()}
@@ -126,6 +134,14 @@ const CategoryCard: React.FC<CategoryCardComponentProps> = ({
         <p className="category-type-label">Typ</p>
         <p className="category-type-value">{type}</p>
       </div>
+      {showRemove && (
+        <button
+          className="btn-delete card-delete"
+          onClick={() => handleRemove && handleRemove(id)}
+        >
+          Usuń
+        </button>
+      )}
     </div>
   );
 };

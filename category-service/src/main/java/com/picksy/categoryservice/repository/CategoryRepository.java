@@ -10,7 +10,6 @@ import java.util.Optional;
 
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, Long> {
-    Optional<Category> findById(Long id);
     Page<Category> findAllByAuthorID(Long id, Pageable pageable);
     Page<Category> findAllByAuthorIDAndIsPublic(Long id, Boolean isPublic, Pageable pageable);
     Page<Category> findByAuthorIDIsNull(Pageable pageable);

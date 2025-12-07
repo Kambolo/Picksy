@@ -1,9 +1,11 @@
+import type { SetInfo } from "../../types/Set";
 import type { Category } from "../../types/Voting";
 import BlockerModal from "../BlockerModal/BlockerModal";
 import { Voting } from "../Voting/Voting";
 
 type RoomPageVotingProps = {
   category: Category | null;
+  set: SetInfo | null;
   roomCode: string | undefined;
   isOwner: boolean;
   participantsCount: number;
@@ -18,6 +20,7 @@ type RoomPageVotingProps = {
 
 export const RoomPageVoting: React.FC<RoomPageVotingProps> = ({
   category,
+  set,
   roomCode,
   isOwner,
   participantsCount,
@@ -33,6 +36,7 @@ export const RoomPageVoting: React.FC<RoomPageVotingProps> = ({
     <>
       <Voting
         category={category}
+        set={set}
         roomCode={roomCode}
         isOwner={isOwner}
         participantsCount={participantsCount}

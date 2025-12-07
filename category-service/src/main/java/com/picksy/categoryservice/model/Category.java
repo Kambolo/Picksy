@@ -30,10 +30,8 @@ public class Category {
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Option> options;
 
-    @Column(name="author_id")
     private Long authorID;
 
-    @Column(name = "photo_url")
     private String photoUrl;
 
     private String description;
@@ -44,6 +42,10 @@ public class Category {
 
     private Boolean isPublic;
 
+
+    @ManyToMany(mappedBy = "categories")
+    private List<CategorySet> categorySets = new ArrayList<>();
+
     public void add(Option option){
         if(options == null) this.options = new ArrayList<>();
 
@@ -52,6 +54,8 @@ public class Category {
     }
 
     public void remove(Option option){
+        if(options == null) return;
+
         options.remove(option);
         option.setCategory(null);
     }

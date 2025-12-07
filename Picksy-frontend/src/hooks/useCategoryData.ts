@@ -16,7 +16,8 @@ export const useCategoryData = (
   ascending: boolean,
   debouncedSearchValue: string,
   userId: number | undefined,
-  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
+  setTotalPages: React.Dispatch<React.SetStateAction<number>>
 ) => {
   const [availableCategories, setAvailableCategories] = useState<
     CategoryCardProps[]
@@ -24,7 +25,6 @@ export const useCategoryData = (
   const [categoriesFromApi, setCategoriesFromApi] = useState<CategoryInfo[]>(
     []
   );
-  const [totalPages, setTotalPages] = useState(1);
   const [totalCategories, setTotalCategories] = useState(0);
   const [error, setError] = useState("");
 
@@ -89,7 +89,13 @@ export const useCategoryData = (
       }
 
       if (response.status !== 200) {
-        console.log(response.error);
+        console.log({
+          currentPage,
+          PAGE_SIZE,
+          sortByForApi,
+          ascending,
+          debouncedSearchValue,
+        });
         setError(response.error);
         return;
       }
@@ -142,7 +148,6 @@ export const useCategoryData = (
   return {
     availableCategories,
     categoriesFromApi,
-    totalPages,
     totalCategories,
     error,
     setError,

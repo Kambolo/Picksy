@@ -62,7 +62,7 @@ spring:
             - id: category-service
               uri: lb://CATEGORY-SERVICE
               predicates:
-                - Path=/api/category/**, /api/option/**, /category-service/v3/api-docs, /category-service/swagger-ui/**
+                - Path=/api/category/**, /api/option/**, /category-service/v3/api-docs, /category-service/swagger-ui/**, /api/category-set/**
 #              filters:
 #                - name: CircuitBreaker
 #                  args:

@@ -11,12 +11,6 @@ const useCategoryDetailsLogic = (
   const [isEditing, setIsEditing] = useState(false);
   const navigate = useNavigate();
 
-  const formatViews = (views: number) => {
-    if (views >= 1000000) return `${(views / 1000000).toFixed(1)}M`;
-    if (views >= 1000) return `${(views / 1000).toFixed(1)}K`;
-    return views.toString();
-  };
-
   const handleEditClick = () => {
     setIsEditing(true);
   };
@@ -45,7 +39,6 @@ const useCategoryDetailsLogic = (
 
   return {
     isEditing,
-    formatViews,
     handleCancelEdit,
     handleEditClick,
     handleSaveEdit,

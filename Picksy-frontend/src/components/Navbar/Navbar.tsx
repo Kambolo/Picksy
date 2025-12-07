@@ -31,7 +31,8 @@ function Navbar() {
         return [
           ...prev,
           { title: "Własne", to: `/${user.id}/category` },
-          { title: "Stwórz", to: "/category/create" },
+          { title: "Stwórz kategorie", to: "/category/create" },
+          { title: "Stwórz zestaw", to: "/set/create" },
         ];
       });
       setVotingDropdownItems((prev) => {

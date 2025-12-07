@@ -1,5 +1,5 @@
 import { useState, type RefObject } from "react";
-import { useNavigate } from "react-router-dom";
+import { redirect, useNavigate } from "react-router-dom";
 import {
   addOptionImage,
   createCategory,
@@ -42,7 +42,8 @@ const useCreateCategory = (
   editMode: boolean = false,
   categoryId?: number,
   onSave?: () => void,
-  existedOptions?: Option[]
+  existedOptions?: Option[],
+  setCreatedCategory?: (id: number) => void
 ): useCreateCategoryReturn => {
   const { user } = useUser();
   const [error, setError] = useState<string>("");
@@ -74,6 +75,9 @@ const useCreateCategory = (
       setError("Wystapił problem podczas zapisywania kategorii.");
       return -1;
     } else {
+      if (setCreatedCategory) {
+        setCreatedCategory(response.result.id);
+      }
       return response.result.id;
     }
   };
@@ -315,7 +319,8 @@ const useCreateCategory = (
         // Upload option images
         await saveOptionsImage(newOptions);
 
-        navigate(`/category/${newCategoryId}`);
+        if (onSave) onSave();
+        else navigate(`/category/${newCategoryId}`);
       }
     } catch (err: any) {
       console.error(err);

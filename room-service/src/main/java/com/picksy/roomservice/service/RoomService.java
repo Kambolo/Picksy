@@ -3,6 +3,7 @@ package com.picksy.roomservice.service;
 import com.picksy.roomservice.message.RoomMessage;
 import com.picksy.roomservice.model.PollDTO;
 import com.picksy.roomservice.model.Room;
+import com.picksy.roomservice.model.SetCategoryKey;
 import com.picksy.roomservice.repository.RoomRepository;
 import com.picksy.roomservice.request.RoomCreateRequest;
 import com.picksy.roomservice.response.RoomDTO;
@@ -26,12 +27,13 @@ public class RoomService {
 
   @Transactional
   public RoomDTO createRoom(RoomCreateRequest request, Long userId) {
+      System.out.println(request.categories().toString());
     Room newRoom =
         Room.builder()
             .name(request.name())
             .roomCode(generateUniqueRoomCode())
             .ownerId(userId)
-            .categoryIds(request.categoryIds())
+            .categorySet(request.categories())
             .votingStarted(false)
             .roomClosed(false)
             .createdAt(LocalDateTime.now().plusHours(1))
@@ -39,15 +41,7 @@ public class RoomService {
 
     roomRepository.save(newRoom);
 
-    return new RoomDTO(
-        newRoom.getRoomCode(),
-        newRoom.getName(),
-        newRoom.getCategoryIds(),
-        newRoom.isVotingStarted(),
-        newRoom.isRoomClosed(),
-        null,
-        newRoom.getOwnerId(),
-        newRoom.getCreatedAt());
+    return mapToDTO(newRoom);
   }
 
   @Transactional
@@ -101,7 +95,9 @@ public class RoomService {
             MessageType.VOTING_STARTED,
             room.get().getOwnerId(),
             null,
-            room.get().getCategoryIds().get(currentCategoryIndex)));
+            room.get().getCategorySet().get(currentCategoryIndex)));
+
+    System.out.println("xd- " + room.get().getCategorySet().get(currentCategoryIndex));
 
     room.get().setCurrentCategoryIndex(currentCategoryIndex);
     roomRepository.save(room.get());
@@ -118,18 +114,18 @@ public class RoomService {
     MessageType type = MessageType.NEXT_CATEGORY;
     int currentCategoryIndex = room.get().getCurrentCategoryIndex() + 1;
 
-    Long categoryId = room.get().getCategoryIds().get(room.get().getCategoryIds().size() - 1);
+    SetCategoryKey category = room.get().getCategorySet().get(room.get().getCategorySet().size() - 1);
 
-    if (currentCategoryIndex >= room.get().getCategoryIds().size()) {
+    if (currentCategoryIndex >= room.get().getCategorySet().size()) {
       type = MessageType.VOTING_FINISHED;
       room.get().setRoomClosed(true);
     } else {
-      categoryId = room.get().getCategoryIds().get(currentCategoryIndex);
+      category = room.get().getCategorySet().get(currentCategoryIndex);
     }
 
     messagingTemplate.convertAndSend(
         "/topic/room/" + roomCode,
-        new RoomMessage(type, room.get().getOwnerId(), null, categoryId));
+        new RoomMessage(type, room.get().getOwnerId(), null, category));
 
     room.get().setCurrentCategoryIndex(currentCategoryIndex);
     roomRepository.save(room.get());
@@ -160,15 +156,7 @@ public class RoomService {
   public RoomDTO getRoomDetails(String roomCode) throws BadRequestException {
     Optional<Room> room = roomRepository.findByRoomCode(roomCode);
     if (room.isEmpty()) throw new BadRequestException("Room does not exist");
-    return new RoomDTO(
-        room.get().getRoomCode(),
-        room.get().getName(),
-        room.get().getCategoryIds(),
-        room.get().isVotingStarted(),
-        room.get().isRoomClosed(),
-        room.get().getParticipants(),
-        room.get().getOwnerId(),
-        room.get().getCreatedAt());
+    return mapToDTO(room.get());
   }
 
   private String generateUniqueRoomCode() {
@@ -226,23 +214,19 @@ public class RoomService {
     System.out.println("DTOS: " + pollDTOS);
 
     // Get category ids from room service
-    List<Long> categoryIds = roomRepository.findAllCategoryIdsByRoomCode(roomCode);
-    System.out.println("cat ids: " + categoryIds);
+    List<SetCategoryKey> categories = roomRepository.findAllSetCategoriesByRoomCode(roomCode);
 
-    // If room owner skipped voting for category it won't be in pollDTOS
-    // If there is category id in categoryIds that isn't in pollDTOS add it and set its choices to
-    // null
-    for (Long categoryId : categoryIds) {
+    for (SetCategoryKey categorySet : categories) {
 
       // Check if a poll with this categoryId exists in the results
-      boolean exists = pollDTOS.stream().anyMatch(p -> p.categoryId().equals(categoryId));
+      boolean exists = pollDTOS.stream().anyMatch(p -> p.category().equals(categorySet));
 
       if (!exists) {
         // Create an empty PollDTO for a category that has no voting data
         pollDTOS.add(
             new PollDTO(
                 null, // poll id is null because it doesn't exist yet
-                categoryId,
+                categorySet,
                 null, // or an empty list,
                 0));
       }
@@ -260,21 +244,18 @@ public class RoomService {
   public List<RoomDTO> getAllClosedRoomsForUser(Long userId) throws BadRequestException {
     List<Room> rooms = roomRepository.findAllClosedByParticipant(userId);
     System.out.println("rooms: " + rooms);
-    List<RoomDTO> roomDTOS = new ArrayList<>();
+    return rooms.stream().map(this::mapToDTO).toList();
+  }
 
-    for (Room room : rooms) {
-      roomDTOS.add(
-          new RoomDTO(
-              room.getRoomCode(),
-              room.getName(),
-              room.getCategoryIds(),
-              room.isVotingStarted(),
-              room.isRoomClosed(),
-              room.getParticipants(),
-              room.getOwnerId(),
-              room.getCreatedAt()));
-    }
-
-    return roomDTOS;
+  private RoomDTO mapToDTO(Room room) {
+    return new RoomDTO(
+        room.getRoomCode(),
+        room.getName(),
+        room.getCategorySet(),
+        room.isVotingStarted(),
+        room.isRoomClosed(),
+        room.getParticipants(),
+        room.getOwnerId(),
+        room.getCreatedAt());
   }
 }

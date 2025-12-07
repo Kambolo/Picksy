@@ -5,7 +5,7 @@ import LoginPage from "./pages/AuthPages/LoginPage";
 import SignUpPage from "./pages/AuthPages/SignUpPage";
 import ForgotPasswordPage from "./pages/AuthPages/ForgotPasswordPage";
 import ProfilePage from "./pages/ProfilePage/ProfilePage";
-import { CategoryPage } from "./pages/CategoryPage/CategoryPage";
+import { ViewPage } from "./pages/ViewPage/ViewPage";
 import VotingRoomSetup from "./pages/VotingRoomSetup/VotingRoomSetup";
 import JoinRoom from "./pages/JoinRoomPage/JoinRoomPage";
 import RoomPage from "./pages/RoomPage/RoomPage";
@@ -16,6 +16,8 @@ import HistoryPage from "./pages/HistoryPage/HistoryPage";
 import UsersPage from "./pages/UsersPage/UsersPage";
 import OAuthCallbackPage from "./pages/OAuthCallbackPage/OAuthCallbackPage";
 import UserProfilePage from "./pages/UserProfilePage/UserProfilePage";
+import SetDetailsPage from "./pages/SetDetailsPage/SetDetailsPage";
+import CreateSetPage from "./pages/CreateSetPage/CreateSetPage";
 
 const router = createBrowserRouter([
   { path: "/", element: <HomePage /> },
@@ -24,9 +26,11 @@ const router = createBrowserRouter([
   { path: "/forgot-password", element: <ForgotPasswordPage /> },
   { path: "/profile", element: <ProfilePage /> },
   { path: "/profile/:userId", element: <UserProfilePage /> },
-  { path: "/category", element: <CategoryPage /> },
-  { path: "/:userId/category/", element: <CategoryPage /> },
+  { path: "/category", element: <ViewPage /> },
+  { path: "/set/create", element: <CreateSetPage /> },
+  { path: "/:userId/category/", element: <ViewPage /> },
   { path: "/category/:id", element: <CategoryDetailsPage /> },
+  { path: "/set/:id", element: <SetDetailsPage /> },
   { path: "/room/create", element: <VotingRoomSetup /> },
   { path: "/room/join", element: <JoinRoom /> },
   { path: "/history", element: <HistoryPage /> },

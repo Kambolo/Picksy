@@ -14,8 +14,14 @@ export const useRoomSetup = () => {
   const [error, setError] = useState<string>("");
 
   // categories hook
-  const { categories, addCategory, removeCategory, clearCategories } =
-    useCategories();
+  const {
+    categories,
+    addCategory,
+    removeCategory,
+    sets,
+    removeSet,
+    clearCategories,
+  } = useCategories();
 
   // setter dla roomName z lokalStorage
   const setRoomName = (value: string) => {
@@ -38,8 +44,11 @@ export const useRoomSetup = () => {
     }
 
     try {
-      const categoryIds = categories.map((c) => c.id);
-      const response = await createRoom(roomName, categoryIds);
+      const categorySet = categories.map((c) => ({
+        setId: c.set ? c.set?.id : -1,
+        categoryId: c.id,
+      }));
+      const response = await createRoom(roomName, categorySet);
 
       if (response.status === 200) {
         const roomCode = response.result.roomCode;
@@ -62,6 +71,8 @@ export const useRoomSetup = () => {
     categories,
     addCategory,
     removeCategory,
+    sets,
+    removeSet,
     clearCategories,
     handleCreateRoom,
     error,

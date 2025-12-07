@@ -37,7 +37,7 @@ public class CategoryController {
     public ResponseEntity<CategoryDTO> createCategory(
             @RequestHeader("X-User-Id") Long userId,
             @RequestBody CategoryBody catBody
-    ) throws BadRequestException {
+    ) {
         return ResponseEntity.status(HttpStatus.CREATED).body(categoryService.create(userId, catBody));
     }
 
@@ -48,7 +48,7 @@ public class CategoryController {
             @RequestHeader("X-User-Role") String role,
             @RequestParam MultipartFile image,
             @PathVariable Long catId
-    ) throws BadRequestException, FileUploadException {
+    ) throws FileUploadException {
         categoryService.addImage(userId, role, catId, image);
         return ResponseEntity.status(HttpStatus.CREATED).body("Category image added.");
     }
@@ -82,7 +82,7 @@ public class CategoryController {
             @Parameter(description = "Page size, default is 5") @RequestParam(defaultValue = "5") int size,
             @Parameter(description = "Field to sort by, default is 'id'") @RequestParam(defaultValue = "id") String sortBy,
             @Parameter(description = "Sort ascending, default is true") @RequestParam(defaultValue = "true") boolean ascending
-    ) throws BadRequestException {
+    ){
         Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
         Pageable pageable = PageRequest.of(page, size, sort);
         return categoryService.findAllByAuthorID(userId, role, pageable, authorId, false);
@@ -99,7 +99,7 @@ public class CategoryController {
             @Parameter(description = "Page size, default is 5") @RequestParam(defaultValue = "5") int size,
             @Parameter(description = "Field to sort by, default is 'id'") @RequestParam(defaultValue = "id") String sortBy,
             @Parameter(description = "Sort ascending, default is true") @RequestParam(defaultValue = "true") boolean ascending
-    ) throws BadRequestException {
+    ){
         Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
         Pageable pageable = PageRequest.of(page, size, sort);
         return categoryService.findAllByAuthorID(authorId, "USER", pageable, authorId, true);
@@ -170,7 +170,7 @@ public class CategoryController {
             @Parameter(description = "Page size, default is 5") @RequestParam(defaultValue = "5") int size,
             @Parameter(description = "Field to sort by, default is 'id'") @RequestParam(defaultValue = "id") String sortBy,
             @Parameter(description = "Sort ascending, default is true") @RequestParam(defaultValue = "true") boolean ascending
-    ) throws BadRequestException {
+    ){
         Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
         Pageable pageable = PageRequest.of(page, size, sort);
         return categoryService.findUserCategoriesByPattern(authorId, authorId, "USER", pattern, pageable, true);
@@ -185,7 +185,7 @@ public class CategoryController {
             @RequestHeader("X-User-Id") Long userId,
             @RequestHeader("X-User-Role") String role,
             @Parameter(description = "ID of the category to delete") @PathVariable Long catId
-    ) throws BadRequestException, FileUploadException, MalformedURLException {
+    ) throws FileUploadException, MalformedURLException {
         categoryService.remove(userId, role, catId);
         return ResponseEntity.ok("Category removed.");
     }
@@ -199,7 +199,7 @@ public class CategoryController {
             @RequestHeader("X-User-Id") Long userId,
             @RequestHeader("X-User-Role") String role,
             @Parameter(description = "ID of the category") @PathVariable Long catId
-    ) throws BadRequestException, FileUploadException, MalformedURLException {
+    )  throws FileUploadException, MalformedURLException {
         categoryService.removeImg(userId, role, catId);
         return ResponseEntity.ok("Category image removed.");
     }
@@ -211,7 +211,7 @@ public class CategoryController {
             @RequestHeader("X-User-Role") String role,
             @PathVariable Long catId,
             @RequestBody CategoryBody categoryBody
-    ) throws BadRequestException {
+    ){
         categoryService.updateCategory(userId, role, catId, categoryBody);
         return ResponseEntity.ok("Category updated.");
     }
@@ -223,7 +223,7 @@ public class CategoryController {
     @PatchMapping("/public/{id}/increase")
     public ResponseEntity<String> increaseCategory(
             @Parameter(description = "ID of the category") @PathVariable Long id
-    ) throws BadRequestException {
+    ){
         categoryService.increaseViews(id);
         return ResponseEntity.ok("Category view count increased.");
     }
@@ -235,7 +235,7 @@ public class CategoryController {
     @GetMapping("/public/{id}/details")
     public ResponseEntity<CategoryDTO> getCategory(
             @Parameter(description = "ID of the category") @PathVariable Long id
-    ) throws BadRequestException {
+    ){
         return ResponseEntity.ok(categoryService.findDTOById(id));
     }
 
@@ -246,7 +246,7 @@ public class CategoryController {
     @GetMapping("/public/{id}/type")
     public ResponseEntity<Type> getType(
             @Parameter(description = "ID of the category") @PathVariable Long id
-    ) throws BadRequestException {
+    ) {
         return ResponseEntity.ok(categoryService.findTypeById(id));
     }
 

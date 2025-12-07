@@ -9,9 +9,11 @@ import { FaUserGroup } from "react-icons/fa6";
 import { VotingType, type Category } from "../../types/Voting";
 import { useVotingLogic } from "../../hooks/useVotingLogic";
 import "./Voting.css";
+import type { SetInfo } from "../../types/Set";
 
 type VotingProps = {
   category: Category | null;
+  set: SetInfo | null;
   roomCode: string | undefined;
   isOwner: boolean;
   participantsCount: number;
@@ -23,6 +25,7 @@ type VotingProps = {
 
 export const Voting: React.FC<VotingProps> = ({
   category,
+  set,
   roomCode,
   isOwner,
   participantsCount,
@@ -53,7 +56,6 @@ export const Voting: React.FC<VotingProps> = ({
     matchedId,
     votedCount,
     handleVote,
-    // eslint-disable-next-line react-hooks/rules-of-hooks
   } = useVotingLogic(
     roomCode,
     category,
@@ -65,7 +67,6 @@ export const Voting: React.FC<VotingProps> = ({
   if (error)
     return <Error error={error} isRoomClosed={false} showResults={false} />;
   if (!hasStarted) {
-    console.log("huj dupa drabina");
     return <Loading />;
   }
 
@@ -73,7 +74,6 @@ export const Voting: React.FC<VotingProps> = ({
     <div>
       <Navbar />
       <div className="voting-page">
-        {/* Header */}
         <div className="voting-header">
           <div className="room-info-container">
             <span className="room-code">Pokój: {roomCode}</span>
@@ -100,7 +100,6 @@ export const Voting: React.FC<VotingProps> = ({
             )}
           </div>
         </div>
-        {/* CATEGORY HEADER */}
         <div className="voting-category-header">
           <div className="voted-counter-container">
             <div>
@@ -113,12 +112,11 @@ export const Voting: React.FC<VotingProps> = ({
 
           <CategoryHeader
             img={category.photoURL}
-            title={category.name}
+            title={set ? `(${set.title}) ${category.name}` : category.name}
             description={category.description}
             type={category.type}
           />
         </div>
-        {/* VOTING COMPONENT */}
         <div className="voting-content">
           {category.type === VotingType.PICK ? (
             <PickVoting
@@ -159,7 +157,6 @@ export const Voting: React.FC<VotingProps> = ({
             </div>
           </div>
         )}
-        {/* NON-OWNER WAITING */}
         {!isOwner && hasVoted && (
           <div className="waiting-message">
             <div className="waiting-icon">⏳</div>

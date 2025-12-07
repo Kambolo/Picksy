@@ -1,6 +1,7 @@
 package com.picksy.roomservice.message;
 
 
+import com.picksy.roomservice.model.SetCategoryKey;
 import com.picksy.roomservice.util.MessageType;
 import lombok.*;
 
@@ -14,5 +15,5 @@ public class RoomMessage {
     private MessageType type;
     private Long userId;
     private String username;
-    private Long categoryId;
+    private SetCategoryKey category;
 }

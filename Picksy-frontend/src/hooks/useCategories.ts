@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import type { CategoryCardProps } from "../components/CategoryCard/CategoryCard";
+import type { SetInfo } from "../types/Set";
 
 const LOCAL_STORAGE_KEY = "categories";
 
@@ -10,7 +11,9 @@ export const useCategories = () => {
     return saved ? JSON.parse(saved) : [];
   });
 
-  // Synchronizacja ze localStorage przy każdej zmianie
+  const [sets, setSets] = useState<Omit<SetInfo, "categories">[]>();
+
+  // Synchronizacja z localStorage przy każdej zmianie
   useEffect(() => {
     if (categories.length > 0) {
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(categories));
@@ -32,10 +35,22 @@ export const useCategories = () => {
 
   const clearCategories = () => setCategories([]);
 
+  const removeSet = (id: number) => {
+    setCategories(categories.filter((cat) => !(cat.set && cat.set.id === id)));
+  };
+
+  useEffect(() => {
+    const sets: Omit<SetInfo, "categories">[] = [];
+    categories.forEach((cat) => cat.set && sets.push(cat.set));
+    setSets(sets);
+  }, [categories]);
+
   return {
     categories,
     setCategories,
     addCategory,
+    sets,
+    removeSet,
     removeCategory,
     clearCategories,
   };

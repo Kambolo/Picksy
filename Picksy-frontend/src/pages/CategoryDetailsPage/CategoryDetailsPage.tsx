@@ -7,6 +7,7 @@ import useCategoryDetailsData from "../../hooks/useCategoryDetailsData";
 import useCategoryDetailsLogic from "../../hooks/useCategoryDetailsLogic";
 import CreateCategoryPage from "../CreateCategoryPage/CreateCategoryPage";
 import "./CategoryDetailsPage.css";
+import { formatViews } from "../../utils/formatViews";
 
 const CategoryDetailsPage: React.FC = () => {
   const { id } = useParams();
@@ -16,7 +17,6 @@ const CategoryDetailsPage: React.FC = () => {
     useCategoryDetailsData(parseInt(id || "-1"));
   const {
     isEditing,
-    formatViews,
     handleCancelEdit,
     handleEditClick,
     handleSaveEdit,
