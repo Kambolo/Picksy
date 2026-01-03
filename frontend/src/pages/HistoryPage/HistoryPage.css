@@ -1,0 +1,167 @@
+.history-page {
+  min-height: 100vh;
+  background-color: var(--primary-bg-color, #fafafa);
+  font-family: var(--font-family, "Poppins", sans-serif);
+}
+
+.history-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+.history-header {
+  margin-bottom: 2.5rem;
+}
+
+.history-header h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--text-color, black);
+  margin: 0 0 0.5rem 0;
+}
+
+.subtitle {
+  font-size: 1rem;
+  color: #666;
+  margin: 0;
+}
+
+.room-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+.room-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.room-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.room-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.room-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-color, black);
+  margin: 0;
+  flex: 1;
+  word-break: break-word;
+}
+
+.room-code {
+  font-size: 0.875rem;
+  color: #666;
+  background: #f5f5f5;
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.room-date {
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.room-date span {
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.room-info-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.role-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.role-badge.owner {
+  background: #fff3e0;
+  color: #f57c00;
+}
+
+.role-badge.participant {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #666;
+}
+
+.empty-state p {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.loading,
+.error {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.1rem;
+}
+
+.navbar {
+  background: var(--navbar-color, #f1efe7);
+  padding: 1rem;
+}
+
+@media (max-width: 768px) {
+  .history-container {
+    padding: 1.5rem 1rem;
+  }
+
+  .history-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .room-list {
+    grid-template-columns: 1fr;
+  }
+
+  .room-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .room-code {
+    align-self: flex-start;
+  }
+}
