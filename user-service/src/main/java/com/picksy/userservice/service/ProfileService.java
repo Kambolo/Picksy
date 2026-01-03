@@ -33,6 +33,7 @@ public class ProfileService {
   private final String AVATAR_PATH = "/avatar";
   private final Cloudinary cloudinary;
   private final String TOPIC = "register-user";
+  private final String DEFAULT_AVATAR_PATH = "https://res.cloudinary.com/dctiucda1/image/upload/v1764165461/default_wm1msb.png";
 
 
   @Transactional
@@ -41,7 +42,7 @@ public class ProfileService {
     String avatarUrl = userProfileMessage.picture();
     Long userId = userProfileMessage.userId();
 
-    String finalAvatarUrl = uploadGoogleAvatarToClaudinary(avatarUrl, userId);
+    String finalAvatarUrl = uploadGoogleAvatarToCloudinary(avatarUrl, userId);
 
     Profile profile =
         Profile.builder()
@@ -53,8 +54,8 @@ public class ProfileService {
     profileRepository.save(profile);
   }
 
-  private String uploadGoogleAvatarToClaudinary(String avatarUrl, Long userId) {
-      String finalAvatarUrl = "https://res.cloudinary.com/dctiucda1/image/upload/v1764165461/default_wm1msb.png";
+  private String uploadGoogleAvatarToCloudinary(String avatarUrl, Long userId) {
+      String finalAvatarUrl = DEFAULT_AVATAR_PATH;
       RestTemplate restTemplate = new RestTemplate();
 
       if (avatarUrl != null) {

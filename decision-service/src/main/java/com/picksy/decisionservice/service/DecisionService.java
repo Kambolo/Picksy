@@ -76,27 +76,14 @@ public class DecisionService {
   }
 
   private Poll buildPoll(String roomCode, Long catId, PollMessage pollMessage) {
-    List<Choice> choices =
-        categoryClient
-            .getOptionsByCategory(catId)
-            .map(
-                optionDto ->
-                    Choice.builder().optionId(optionDto.getId()).count(0).poll(null).build())
-            .collectList()
-            .block();
-
     CategoryType type = categoryClient.getCategoryType(catId).block();
 
-    Poll poll =
-        Poll.builder()
-            .categoryId(catId)
-            .roomCode(roomCode)
-            .participantsCount(pollMessage.getParticipantsCount())
-            .categoryType(type)
-            .build();
-
-    poll.setChoices(choices);
-    return poll;
+    return Poll.builder()
+        .categoryId(catId)
+        .roomCode(roomCode)
+        .participantsCount(pollMessage.getParticipantsCount())
+        .categoryType(type)
+        .build();
   }
 
   // In PICK polls there is only one vote that have all the user choices
@@ -114,7 +101,12 @@ public class DecisionService {
       Choice choice =
           choiceRepository
               .findByPollIdAndOptionId(poll.getId(), pollMessage.getOptionsId().getFirst())
-              .orElseThrow(() -> new BadRequestException("Option not found"));
+              .orElse(
+                  Choice.builder()
+                      .optionId(pollMessage.getOptionsId().getFirst())
+                      .count(0)
+                      .poll(poll)
+                      .build());
       choice.setCount(choice.getCount() + 1);
       choiceRepository.save(choice);
 
@@ -137,9 +129,12 @@ public class DecisionService {
       List<Choice> choices =
           choiceRepository.findByPollIdAndOptionIdIn(poll.getId(), pollMessage.getOptionsId());
 
-      // Check if all choices were found
-      if (choices.size() != pollMessage.getOptionsId().size())
-        throw new BadRequestException("Not all options were found");
+      for(Long optionId: pollMessage.getOptionsId()) {
+          boolean anyMatch = choices.stream().anyMatch(choice -> choice.getOptionId().equals(optionId));
+
+          if(!anyMatch)
+            choices.add(Choice.builder().optionId(optionId).poll(poll).count(0).build());
+      }
 
       // increase count for choices
       for (Choice choice : choices) {
@@ -211,7 +206,8 @@ public class DecisionService {
       for (Choice choice : poll.getChoices()) {
         choiceDTOS.add(new ChoiceDTO(choice.getOptionId(), choice.getCount()));
       }
-      pollDTOS.add(new PollDTO(poll.getId(), poll.getCategoryId(), choiceDTOS, poll.getParticipantsCount()));
+      pollDTOS.add(
+          new PollDTO(poll.getId(), poll.getCategoryId(), choiceDTOS, poll.getParticipantsCount()));
     }
     System.out.println("pollDTOS: " + pollDTOS);
 

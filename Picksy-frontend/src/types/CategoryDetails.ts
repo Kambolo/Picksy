@@ -8,7 +8,7 @@ export type CategoryDetails = {
   type: CategoryType;
   options: Option[];
   author: string;
-  authorID?: number;
+  authorID: number;
   photoURL: string;
   description: string | null;
   views: number;

@@ -21,6 +21,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
 
     private final List<String> publicPaths = List.of(
             "/auth/",
+            "/account/public",
             "/api/category/public",
             "/api/category-set/public",
             "/api/option/public",
@@ -30,50 +31,40 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
             "/ws-room",
             "/ws-poll",
             "/oauth2",
-            "/login"
+            "/login",
+            "/auth-service/v3/api-docs",
+            "/category-service/v3/api-docs",
+            "/room-service/v3/api-docs",
+            "/user-service/v3/api-docs",
+            "/decision-service/v3/api-docs"
     );
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-
         String path = exchange.getRequest().getURI().getPath();
 
-        System.out.println("=== AuthGlobalFilter ===");
-        System.out.println("Path: " + path);
-
         // Check if path is public
-        boolean isPublic = false;
         for (String publicPath : publicPaths) {
             if (path.startsWith(publicPath)) {
-                isPublic = true;
-                break;
+                return chain.filter(exchange);
             }
-        }
-
-        // Special case: /auth/account/secure/me is NOT public
-        if (path.contains("secure")) {
-            isPublic = false;
-        }
-
-        if (isPublic) {
-            System.out.println("Public endpoint - allowing access");
-            return chain.filter(exchange);
         }
 
         // Not public - require authentication
         String token = parseJwt(exchange);
 
+        // Unauthorized request
         if (token == null || !jwtUtils.validateJwtToken(token)) {
-            System.out.println("Unauthorized request to " + path);
             exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
             return exchange.getResponse().setComplete();
         }
 
-        // Add user headers for non-WebSocket paths
+        // Get user data form JWT Token
         Long userId = jwtUtils.getUserIdFromToken(token);
         String email = jwtUtils.getStringFromToken(token, "email");
         String role = jwtUtils.getStringFromToken(token, "role");
 
+        // Set additional headers containing user data
         ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
                 .header("X-User-Id", String.valueOf(userId))
                 .header("X-User-Email", email != null ? email : "")
@@ -81,7 +72,6 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
                 .build();
 
         exchange = exchange.mutate().request(mutatedRequest).build();
-
 
         return chain.filter(exchange);
     }

@@ -27,12 +27,11 @@ const useCategoryDetailsLogic = (
   const handleDeleteClick = async () => {
     setLoading(true);
     const response = category ? await deleteCategory(category.id) : null;
-    console.log(response);
 
     if (response && response.status === 200) {
       setLoading(false);
-      console.log("okej");
-      navigate("/category");
+
+      navigate(-1);
     }
     setLoading(false);
   };

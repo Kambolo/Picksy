@@ -50,8 +50,8 @@ public class MovieService {
               "Zestaw %d filmów %s sortowanych od najpopularniejszych",
               movies.size(), genre.name());
 
-      CategoryBody categoryBody = new CategoryBody(title, "SWIPE", description, true);
-      CategoryDTO categoryDTO = categoryService.create(null, categoryBody);
+      CategoryBody categoryBody = new CategoryBody(title, "SWIPE", description, true, null);
+      CategoryDTO categoryDTO = categoryService.create((long)-1, categoryBody);
 
       // Add category image as first movie poster
       categoryService.addImageUrl(

@@ -43,7 +43,7 @@ const useCreateCategory = (
   categoryId?: number,
   onSave?: () => void,
   existedOptions?: Option[],
-  setCreatedCategory?: (id: number) => void
+  setId?: number
 ): useCreateCategoryReturn => {
   const { user } = useUser();
   const [error, setError] = useState<string>("");
@@ -68,16 +68,14 @@ const useCreateCategory = (
       title,
       selectedType,
       description,
-      isPublic
+      isPublic,
+      setId
     );
 
     if (response.status !== 201) {
       setError("Wystapił problem podczas zapisywania kategorii.");
       return -1;
     } else {
-      if (setCreatedCategory) {
-        setCreatedCategory(response.result.id);
-      }
       return response.result.id;
     }
   };
@@ -103,6 +101,7 @@ const useCreateCategory = (
     catId: number
   ): Promise<void> => {
     if (!user) return;
+    console.log("Uploading category image for catId:", catId);
     const response = await setCategoryImage(catId, file);
     if (response.status !== 201) {
       setError("Wystąpił problem przy dodawaniu zdjęcia kategorii");

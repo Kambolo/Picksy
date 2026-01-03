@@ -29,8 +29,8 @@ export const useCategoryData = (
   const [error, setError] = useState("");
 
   // Fetch author name by ID
-  const fetchAuthorName = async (authorID: number | null): Promise<string> => {
-    if (authorID === null) return "Picksy";
+  const fetchAuthorName = async (authorID: number): Promise<string> => {
+    if (authorID === -1) return "Picksy";
 
     const response = await getUser(authorID);
     if (response.status !== 200) {

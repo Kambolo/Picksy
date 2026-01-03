@@ -11,6 +11,21 @@ const ResultPage = () => {
   const { error, categories, loading } = useResults({ roomCode });
   const { showMore, handleShowMore } = useShowMore();
 
+  // Grupowanie kategorii po setId
+  const groupedBySet = categories.reduce((acc, category) => {
+    if (!acc[category.setId]) {
+      acc[category.setId] = {
+        setId: category.setId,
+        setTitle: category.setTitle,
+        categories: [],
+      };
+    }
+    acc[category.setId].categories.push(category);
+    return acc;
+  }, {} as Record<number, { setId: number; setTitle: string; categories: typeof categories }>);
+
+  const sets = Object.values(groupedBySet);
+
   if (loading) {
     return <Loading />;
   }
@@ -31,17 +46,29 @@ const ResultPage = () => {
         <div className="result-header-container">
           <div className="main-header">
             <div className="header-content">
-              <h1 className="category-title">Podsumowanie</h1>
+              <h1 className="main-title">Podsumowanie</h1>
             </div>
           </div>
         </div>
-        {categories.map((category) => (
-          <CategoryResults
-            key={category.id}
-            category={category}
-            handleShowMore={handleShowMore}
-            showMore={showMore}
-          />
+
+        {sets.map((set) => (
+          <div key={set.setId} className="set-group-wrapper">
+            <div className="set-group-container">
+              <div className="set-header-result">
+                <h2 className="set-title-result">{set.setTitle}</h2>
+              </div>
+              <div className="set-categories">
+                {set.categories.map((category) => (
+                  <CategoryResults
+                    key={category.id}
+                    category={category}
+                    handleShowMore={handleShowMore}
+                    showMore={showMore}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
         ))}
       </div>
     </>

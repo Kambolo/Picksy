@@ -5,7 +5,7 @@ import { Voting } from "../Voting/Voting";
 
 type RoomPageVotingProps = {
   category: Category | null;
-  set: SetInfo | null;
+  set: Omit<SetInfo, "categories"> | null;
   roomCode: string | undefined;
   isOwner: boolean;
   participantsCount: number;

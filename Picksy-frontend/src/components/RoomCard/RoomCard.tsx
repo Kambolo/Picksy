@@ -18,7 +18,6 @@ const RoomCard: React.FC<RoomCardProps> = ({
     : 0;
 
   const formatDate = (dateString: string) => {
-    console.log(dateString);
     const date = new Date(dateString);
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - date.getTime());

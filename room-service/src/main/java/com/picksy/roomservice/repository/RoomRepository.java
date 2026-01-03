@@ -15,7 +15,7 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
     Optional<Room> findByRoomCode(String roomCode);
 
     @Query("SELECT sc FROM Room r JOIN r.categorySet sc WHERE r.roomCode = :roomCode")
-    List<SetCategoryKey> findAllSetCategoriesByRoomCode(@Param("roomCode") String roomCode); // Zmieniony typ zwracany
+    List<SetCategoryKey> findAllSetCategoriesByRoomCode(@Param("roomCode") String roomCode);
 
     @Query("SELECT COUNT(key(p)) FROM Room r JOIN r.participants p WHERE r.roomCode = :roomCode")
     int getParticipantsCountByRoomCode(@Param("roomCode") String roomCode);

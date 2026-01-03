@@ -28,6 +28,7 @@ type CategoryCardComponentProps = CategoryCardProps & {
   showRemove?: boolean;
   handleRemove?: (id: number) => void;
   canSelect?: boolean;
+  isPartOfSet?: boolean;
 };
 
 const CategoryCard: React.FC<CategoryCardComponentProps> = ({
@@ -48,6 +49,7 @@ const CategoryCard: React.FC<CategoryCardComponentProps> = ({
   showRemove,
   handleRemove,
   canSelect,
+  isPartOfSet = false,
 }) => {
   const { isAddCategoryOpen } = useCategoryUI();
 
@@ -99,11 +101,9 @@ const CategoryCard: React.FC<CategoryCardComponentProps> = ({
         <img src={img} alt={title} />
       </div>
       <div className="category-card-center">
-        <div className="category-card-top">
-          <h2 className="category-card-title">{title}</h2>
-          <h3 className="category-card-views">Wyświetlenia: {views}</h3>
-        </div>
-        {author != "" && authorId ? (
+        <h2 className="category-card-title">{title}</h2>
+        <h3 className="category-card-views">Wyświetlenia: {views}</h3>
+        {author != "" && authorId > 0 && isPartOfSet ? (
           <Link
             to={`/profile/${authorId}`}
             onClick={(e) => e.stopPropagation()}
@@ -112,7 +112,9 @@ const CategoryCard: React.FC<CategoryCardComponentProps> = ({
             <h3 className="category-card-author">Autor: {author}</h3>
           </Link>
         ) : (
-          <h3 className="category-card-author">Autor: {author}</h3>
+          authorId === -1 && (
+            <h3 className="category-card-author">Autor: Picksy</h3>
+          )
         )}
 
         <div className="category-description">

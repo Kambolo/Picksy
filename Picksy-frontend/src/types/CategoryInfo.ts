@@ -3,7 +3,7 @@ import type { CategoryType } from "./CategoryDetails";
 export type CategoryInfo = {
   id: number;
   name: string;
-  authorID: number | null;
+  authorID: number;
   author: string;
   type: CategoryType;
   photoURL: string;

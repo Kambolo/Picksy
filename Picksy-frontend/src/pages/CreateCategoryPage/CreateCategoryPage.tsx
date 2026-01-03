@@ -15,7 +15,7 @@ export interface CreateCategoryPageProps {
   categoryData?: CategoryDetails;
   onCancel?: () => void;
   onSave?: () => void;
-  setCreatedCategory?: (id: number) => void;
+  setId?: number;
 }
 
 const CreateCategoryPage: React.FC<CreateCategoryPageProps> = ({
@@ -23,7 +23,7 @@ const CreateCategoryPage: React.FC<CreateCategoryPageProps> = ({
   categoryData,
   onCancel,
   onSave,
-  setCreatedCategory,
+  setId,
 }) => {
   const types: CategoryType[] = ["PICK", "SWIPE"];
   const [selectedType, setSelectedType] = useState<CategoryType>(
@@ -61,7 +61,7 @@ const CreateCategoryPage: React.FC<CreateCategoryPageProps> = ({
     categoryData?.id,
     onSave,
     categoryData?.options,
-    setCreatedCategory
+    setId
   );
 
   const handleFormSubmit = async (e: React.FormEvent) => {
@@ -81,6 +81,9 @@ const CreateCategoryPage: React.FC<CreateCategoryPageProps> = ({
       <div className="profile-container">
         <div className="loading-spinner">
           <ImSpinner size={32} />
+        </div>
+        <div>
+          <p>Zapisywanie Kategorii...</p>
         </div>
       </div>
     );
@@ -151,18 +154,20 @@ const CreateCategoryPage: React.FC<CreateCategoryPageProps> = ({
                 ></textarea>
               </div>
 
-              <div className="form-group checkbox-group">
-                <input
-                  name="isPublic"
-                  id="isPublic"
-                  type="checkbox"
-                  checked={isPublic}
-                  onChange={() => setIsPublic((prev) => !prev)}
-                />
-                <label htmlFor="isPublic">
-                  Kategoria publiczna (widoczna dla wszystkich)
-                </label>
-              </div>
+              {!setId && (
+                <div className="form-group checkbox-group">
+                  <input
+                    name="isPublic"
+                    id="isPublic"
+                    type="checkbox"
+                    checked={isPublic}
+                    onChange={() => setIsPublic((prev) => !prev)}
+                  />
+                  <label htmlFor="isPublic">
+                    Kategoria publiczna (widoczna dla wszystkich)
+                  </label>
+                </div>
+              )}
 
               {/* Options Component */}
               <CategoryOptions

@@ -5,12 +5,14 @@ import com.picksy.categoryservice.exception.InvalidRequestException;
 import com.picksy.categoryservice.exception.ResourceNotFoundException;
 import com.picksy.categoryservice.model.Category;
 import com.picksy.categoryservice.model.CategorySet;
+import com.picksy.categoryservice.repository.CategoryRepository;
 import com.picksy.categoryservice.repository.CategorySetRepository;
 import com.picksy.categoryservice.request.CreateCategorySetBody;
 import com.picksy.categoryservice.request.UpdateCategorySetBody;
 import com.picksy.categoryservice.response.CategoryDTO;
 import com.picksy.categoryservice.response.CategorySetDTO;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,6 +28,7 @@ import java.util.stream.Collectors;
 public class CategorySetService {
   private final CategorySetRepository categorySetRepository;
   private final CategoryService categoryService;
+  private final CategoryRepository categoryRepository;
 
   @Transactional
   public CategorySetDTO create(Long userId, CreateCategorySetBody createCategorySetBody) {
@@ -41,23 +44,24 @@ public class CategorySetService {
             .created(LocalDateTime.now().plusHours(1))
             .build();
 
-    for (Long id : createCategorySetBody.categoryIds()) {
-      categorySet.add(categoryService.findById(id));
-    }
     categorySetRepository.save(categorySet);
     return mapToDTO(categorySet);
   }
 
-  @Transactional
-  public CategorySetDTO addCategory(
-      Long userId, String role, UpdateCategorySetBody updateCategorySetBody) {
-    return updateCategoriesInSet(true, userId, role, updateCategorySetBody);
-  }
 
   @Transactional
   public CategorySetDTO removeCategory(
       Long userId, String role, UpdateCategorySetBody updateCategorySetBody) {
-    return updateCategoriesInSet(false, userId, role, updateCategorySetBody);
+      CategorySet categorySet = findById(updateCategorySetBody.setId());
+
+      checkAuthor(userId, role, categorySet);
+
+      Category category = categoryService.findById(updateCategorySetBody.categoryId());
+      categorySet.remove(category);
+      categoryRepository.delete(category);
+
+      categorySetRepository.save(categorySet);
+    return mapToDTO(categorySet);
   }
 
   @Transactional
@@ -74,6 +78,24 @@ public class CategorySetService {
             .findByIdWithCategories(setId)
             .orElseThrow(
                 () -> new ResourceNotFoundException("Category Set not found with ID: " + setId));
+    return mapToDTO(categorySet);
+  }
+
+  @Transactional
+  public CategorySetDTO updateCategorySet(
+      Long userId, String role, Long setId, CreateCategorySetBody updateCategorySetBody) {
+    CategorySet categorySet = findById(setId);
+    checkAuthor(userId, role, categorySet);
+
+    if (updateCategorySetBody.name() != null && !updateCategorySetBody.name().isBlank()) {
+      categorySet.setName(updateCategorySetBody.name());
+    }
+
+    if (updateCategorySetBody.isPublic() != null) {
+      categorySet.setIsPublic(updateCategorySetBody.isPublic());
+    }
+
+    categorySetRepository.save(categorySet);
     return mapToDTO(categorySet);
   }
 
@@ -122,23 +144,6 @@ public class CategorySetService {
     categorySetRepository.save(categorySet);
   }
 
-  private CategorySetDTO updateCategoriesInSet(
-      Boolean add, Long userId, String role, UpdateCategorySetBody updateCategorySetBody) {
-    CategorySet categorySet = findById(updateCategorySetBody.setId());
-
-    checkAuthor(userId, role, categorySet);
-
-    Category category = categoryService.findById(updateCategorySetBody.categoryId());
-
-    if (add) {
-      categorySet.add(category);
-    } else {
-      categorySet.remove(category);
-    }
-
-    categorySetRepository.save(categorySet);
-    return mapToDTO(categorySet);
-  }
 
   private void checkAuthor(Long userId, String role, CategorySet categorySet) {
     if (role.equals("ADMIN")) return;

@@ -7,11 +7,8 @@ spring:
     gateway:
       server:
         webflux:
-          httpclient:
-            connect-timeout: 12000
-            response-timeout: 12s
           globalcors:
-            corsConfigurations:
+            cors-configurations:
               '[/auth/**]':
                 allowedOriginPatterns:
                   - "http://localhost:5173"
@@ -37,48 +34,59 @@ spring:
                   - OPTIONS
                 allowedHeaders: "*"
                 allowCredentials: true
+              '[/account/**]':
+                allowedOriginPatterns:
+                  - "http://localhost:5173"
+                allowedMethods:
+                  - GET
+                  - POST
+                  - PUT
+                  - PATCH
+                  - DELETE
+                  - OPTIONS
+                allowedHeaders: "*"
+                allowCredentials: true
 
           routes:
             - id: auth-service
               uri: lb://AUTH-SERVICE
               predicates:
-                - Path=/auth/**, /auth-service/v3/api-docs, /oauth2/**, /login/**
-#              filters:
-#                - name: CircuitBreaker
-#                  args:
-#                    name: authCircuitBreaker
-#                    fallbackUri: forward:/fallback/auth
+                - Path=/auth/**, /auth-service/v3/api-docs, /oauth2/**, /login/**, /account/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: authServiceCB
+                    fallbackUri: forward:/fallback/auth
 
             - id: user-service
               uri: lb://USER-SERVICE
               predicates:
                 - Path=/api/profile/**, /user-service/v3/api-docs
-#              filters:
-#                - name: CircuitBreaker
-#                  args:
-#                    name: userCircuitBreaker
-#                    fallbackUri: forward:/fallback/user
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: userServiceCB
+                    fallbackUri: forward:/fallback/user
 
             - id: category-service
               uri: lb://CATEGORY-SERVICE
               predicates:
                 - Path=/api/category/**, /api/option/**, /category-service/v3/api-docs, /category-service/swagger-ui/**, /api/category-set/**
-#              filters:
-#                - name: CircuitBreaker
-#                  args:
-#                    name: categoryCircuitBreaker
-#                    fallbackUri: forward:/fallback/category
-
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: categoryServiceCB
+                    fallbackUri: forward:/fallback/category
 
             - id: room-service
               uri: lb://ROOM-SERVICE
               predicates:
                 - Path=/api/room/**, /room-service/v3/api-docs
-#              filters:
-#                - name: CircuitBreaker
-#                  args:
-#                    name: roomCircuitBreaker
-#                    fallbackUri: forward:/fallback/room
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: roomServiceCB
+                    fallbackUri: forward:/fallback/room
 
             - id: room-ws
               uri: lb:ws://ROOM-SERVICE
@@ -88,12 +96,12 @@ spring:
             - id: decision-service
               uri: lb://DECISION-SERVICE
               predicates:
-                - Path=/api/decision/**, /decision-service/v3/api-docs
-#              filters:
-#                - name: CircuitBreaker
-#                  args:
-#                    name: decisionCircuitBreaker
-#                    fallbackUri: forward:/fallback/decision
+                - Path=/api/decision/**, /decision-service/v3/api-docs, /decision-service/swagger-ui/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: decisionServiceCB
+                    fallbackUri: forward:/fallback/decision
 
             - id: decision-ws
               uri: lb:ws://DECISION-SERVICE
@@ -119,52 +127,15 @@ springdoc:
         name: Room Service
       - url: /auth-service/v3/api-docs
         name: Auth Service
-
-resilience4j:
-  circuitbreaker:
-    configs:
-      default:
-        failureRateThreshold: 50
-        waitDurationInOpenState: 30s
-        slidingWindowType: COUNT_BASED
-        slidingWindowSize: 10
-        minimumNumberOfCalls: 20
-        permittedNumberOfCallsInHalfOpenState: 3
-        slowCallDurationThreshold: 10s
-        slowCallRateThreshold: 100
-
-      configForServiceWithImageUpload:
-        failureRateThreshold: 80
-        waitDurationInOpenState: 30s
-        slidingWindowType: COUNT_BASED
-        slidingWindowSize: 10
-        minimumNumberOfCalls: 60
-        permittedNumberOfCallsInHalfOpenState: 3
-        slowCallDurationThreshold: 120s
-        slowCallRateThreshold: 80
-
-    instances:
-      authCircuitBreaker:
-        baseConfig: default
-
-      userCircuitBreaker:
-        baseConfig: configForServiceWithImageUpload
-
-      categoryCircuitBreaker:
-        baseConfig: configForServiceWithImageUpload
-
-      roomCircuitBreaker:
-        baseConfig: default
-
-      decisionCircuitBreaker:
-        baseConfig: default
-
+      - url: /decision-service/v3/api-docs
+        name: Decision Service
 
 eureka:
   client:
     service-url:
       defaultZone: http://eureka-server:8761/eureka/
 
+# Actuator Endpoints
 management:
   health:
     circuit breakers:
@@ -173,8 +144,9 @@ management:
   endpoints:
     web:
       exposure:
-        include: '*'
+        include: "*"
 
   endpoint:
     health:
       show-details: always
+

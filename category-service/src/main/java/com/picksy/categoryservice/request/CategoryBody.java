@@ -4,5 +4,6 @@ public record CategoryBody(
                         String name,
                         String type,
                         String description,
-                        Boolean isPublic){
+                        Boolean isPublic,
+                        Long setId){
 }

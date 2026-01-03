@@ -1,5 +1,7 @@
 export interface ResultCategory {
   id: number;
+  setId: number;
+  setTitle: string;
   name: string;
   options: Choice[];
   participantsCount: number;

@@ -28,7 +28,7 @@ export function getCategory(id: number) {
 }
 
 export function increaseViews(id: number) {
-  return apiRequest(`api/category/public/${id}/increase`, "PATCH");
+  return apiRequest(`api/category/public/${id}/views`, "PATCH");
 }
 
 export function getCategoryOptions(id: number) {
@@ -39,13 +39,16 @@ export function createCategory(
   name: string,
   type: CategoryType,
   description: string,
-  isPublic: boolean
+  isPublic: boolean,
+  setId?: number
 ) {
+  console.log("Creating category with setId:", setId);
   return apiRequest(`api/category/secure`, "POST", true, false, {
     name,
     type,
     description,
     isPublic,
+    setId: setId || null,
   });
 }
 
@@ -150,14 +153,9 @@ export function deleteOptionImage(optId: number) {
   return apiRequest(`api/option/secure/image/${optId}`, "DELETE", true);
 }
 
-export function createSet(
-  name: string,
-  categoryIds: number[],
-  isPublic: boolean
-) {
+export function createSet(name: string, isPublic: boolean) {
   return apiRequest(`api/category-set/secure`, "POST", true, false, {
     name,
-    categoryIds,
     isPublic,
   });
 }
@@ -249,4 +247,11 @@ export function getAllPublicSets(
 
 export function increaseSetViews(setId: number) {
   return apiRequest(`api/category-set/public/${setId}/views`, "PATCH");
+}
+
+export function updateSet(name: string, isPublic: boolean, setId: number) {
+  return apiRequest(`api/category-set/secure/${setId}`, "PATCH", true, false, {
+    name,
+    isPublic,
+  });
 }

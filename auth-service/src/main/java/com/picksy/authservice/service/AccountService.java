@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -90,12 +91,11 @@ public class AccountService {
             .orElseThrow(() -> new UserNotFoundException("User not found"));
 
     if (body.banDate() == null) {
-      throw new InvalidRequestException("Field 'banDate' is required");
+      user.setBannedUntil(LocalDateTime.MAX);
+    }else{
+        user.setBannedUntil(body.banDate());
     }
-
-
     user.setIsBanned(true);
-    user.setBannedUntil(body.banDate());
 
     userRepository.save(user);
   }

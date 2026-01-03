@@ -29,26 +29,12 @@ const ProfileForm = ({
       <div className="profile-section">
         <div className="section-header">
           <FaUser className="section-icon" size="1.2em" />
-          <h2>Username</h2>
+          <h2>Nazwa użytkownika</h2>
         </div>
         <input
           type="text"
           name="username"
           value={profile.username}
-          onChange={onEditProfile}
-          disabled={!editFields}
-        />
-      </div>
-
-      <div className="profile-section">
-        <div className="section-header">
-          <FaEnvelope className="section-icon" size="1.2em" />
-          <h2>Email</h2>
-        </div>
-        <input
-          type="text"
-          name="email"
-          value={profile.email}
           onChange={onEditProfile}
           disabled={!editFields}
         />

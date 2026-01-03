@@ -11,7 +11,7 @@ export function createRoom(
 }
 
 export function closeRoom(roomCode: string) {
-  return apiRequest("api/room/secure/close", "POST", true, false, {
+  return apiRequest("api/room/secure/close", "PATCH", true, false, {
     roomCode,
   });
 }
@@ -21,19 +21,19 @@ export function getRoomDetails(roomCode: string) {
 }
 
 export function startVoting(roomCode: string) {
-  return apiRequest("api/room/secure/start", "POST", true, false, {
+  return apiRequest("api/room/secure/start", "PATCH", true, false, {
     roomCode,
   });
 }
 
 export function nextCategory(roomCode: string) {
-  return apiRequest("api/room/secure/next", "POST", true, false, {
+  return apiRequest("api/room/secure/next", "PATCH", true, false, {
     roomCode,
   });
 }
 
 export function endVoting(roomCode: string) {
-  return apiRequest("api/room/secure/finish", "POST", true, false, {
+  return apiRequest("api/room/secure/finish", "PATCH", true, false, {
     roomCode,
   });
 }

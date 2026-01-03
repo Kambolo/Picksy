@@ -33,7 +33,10 @@ export const useRoomPageLogic = () => {
 
   const [categoryId, setCategoryId] = useState(-1);
   const [currentCategory, setCurrentCategory] = useState<Category | null>(null);
-  const [currentSet, setCurrentSet] = useState<SetInfo | null>(null);
+  const [currentSet, setCurrentSet] = useState<Omit<
+    SetInfo,
+    "categories"
+  > | null>(null);
   const [isLoadingCategory, setIsLoadingCategory] = useState(false);
   const [showResults, setShowResults] = useState(false);
 
@@ -269,7 +272,16 @@ export const useRoomPageLogic = () => {
     setIsLoadingCategory(true);
     const response = await getSetById(setId);
     if (response.status === 200) {
-      setCurrentSet({ ...response.result });
+      setCurrentSet({
+        id: response.result.id,
+        title: response.result.name,
+        author: "Picksy",
+        authorId: response.result.authorId,
+        categoryCount: response.result.categories.length,
+        isPublic: response.result.isPublic,
+        views: response.result.views,
+        showIsPublic: false,
+      });
     } else {
       setError("Błąd podczas wczytywania zestawu.");
     }

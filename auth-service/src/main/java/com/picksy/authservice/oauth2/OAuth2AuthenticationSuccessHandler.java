@@ -27,8 +27,6 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
       HttpServletRequest request, HttpServletResponse response, Authentication authentication)
       throws IOException, ServletException {
 
-    System.out.println("OAuth2 Success Handler called!");
-
     OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
     Map<String, Object> attributes = oauthToken.getPrincipal().getAttributes();
 

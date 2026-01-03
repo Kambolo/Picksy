@@ -49,8 +49,9 @@ export const useRoomSetup = () => {
         categoryId: c.id,
       }));
       const response = await createRoom(roomName, categorySet);
+      console.log("Create room response:", response);
 
-      if (response.status === 200) {
+      if (response.status === 201) {
         const roomCode = response.result.roomCode;
         navigate("/room/" + roomCode, {
           state: {

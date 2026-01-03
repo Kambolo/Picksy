@@ -1,6 +1,48 @@
-
 .home-page-container {
-    background-color: var(--primary-bg-color);
-    height: 200vh;
-    width: 100vw;
+  min-height: 100vh;
+  background: white;
+}
+
+/* Smooth scroll dla linków anchor */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Wspólne style dla sekcji */
+.home-section {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 4rem 2rem;
+}
+
+.section-title {
+  font-size: 2.5rem;
+  font-weight: bold;
+  text-align: center;
+  color: #1e293b;
+  margin-bottom: 1rem;
+}
+
+.section-subtitle {
+  font-size: 1.25rem;
+  text-align: center;
+  color: #64748b;
+  margin-bottom: 3rem;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (max-width: 768px) {
+  .home-section {
+    padding: 3rem 1.5rem;
+  }
+
+  .section-title {
+    font-size: 2rem;
+  }
+
+  .section-subtitle {
+    font-size: 1.125rem;
+  }
 }

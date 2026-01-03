@@ -9,36 +9,32 @@ import org.springframework.web.bind.annotation.RestController;
 public class FallbackController{
     @RequestMapping("/fallback/user")
     public ResponseEntity<String> userFallback() {
-        return ResponseEntity
-                .status(HttpStatus.SERVICE_UNAVAILABLE)
-                .body("User Service is unavailable. Please try again later.");
+        return fallback("User");
     }
 
     @RequestMapping("/fallback/room")
     public ResponseEntity<String> roomFallback() {
-        return ResponseEntity
-                .status(HttpStatus.SERVICE_UNAVAILABLE)
-                .body("Room Service is unavailable. Please try again later.");
+        return fallback("Room");
     }
 
     @RequestMapping("/fallback/auth")
     public ResponseEntity<String> authFallback() {
-        return ResponseEntity
-                .status(HttpStatus.SERVICE_UNAVAILABLE)
-                .body("Auth Service is unavailable. Please try again later.");
+        return fallback("Auth");
     }
 
     @RequestMapping("/fallback/decision")
     public ResponseEntity<String> decisionFallback() {
-        return ResponseEntity
-                .status(HttpStatus.SERVICE_UNAVAILABLE)
-                .body("Decision Service is unavailable. Please try again later.");
+        return fallback("Decision");
     }
 
     @RequestMapping("/fallback/category")
     public ResponseEntity<String> categoryFallback() {
+        return fallback("Category");
+    }
+
+    private ResponseEntity<String> fallback(String serviceName) {
         return ResponseEntity
                 .status(HttpStatus.SERVICE_UNAVAILABLE)
-                .body("Category Service is unavailable. Please try again later.");
+                .body(serviceName + "Service is unavailable. Please try again later.");
     }
 }

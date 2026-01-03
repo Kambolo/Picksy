@@ -102,7 +102,7 @@ const CategoryDetailsPage: React.FC = () => {
             </div>
 
             <div className="category-meta">
-              {category.authorID ? (
+              {category.authorID > 0 ? (
                 <Link
                   to={`/profile/${category.authorID}`}
                   onClick={(e) => e.stopPropagation()}

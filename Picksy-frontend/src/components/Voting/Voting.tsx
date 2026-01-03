@@ -10,10 +10,11 @@ import { VotingType, type Category } from "../../types/Voting";
 import { useVotingLogic } from "../../hooks/useVotingLogic";
 import "./Voting.css";
 import type { SetInfo } from "../../types/Set";
+import { endVoting, nextCategory } from "../../api/roomApi";
 
 type VotingProps = {
   category: Category | null;
-  set: SetInfo | null;
+  set: Omit<SetInfo, "categories"> | null;
   roomCode: string | undefined;
   isOwner: boolean;
   participantsCount: number;
@@ -61,7 +62,10 @@ export const Voting: React.FC<VotingProps> = ({
     category,
     isOwner,
     participantsCount,
-    currentCategory
+    currentCategory,
+    onNextCategory,
+    categoriesCount,
+    onEndVoting
   );
 
   if (error)

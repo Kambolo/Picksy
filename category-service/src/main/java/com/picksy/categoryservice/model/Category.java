@@ -18,45 +18,49 @@ import java.util.List;
 @NoArgsConstructor
 public class Category {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    private String name;
+  private String name;
 
-    @Enumerated(EnumType.STRING)
-    private Type type;
+  @Enumerated(EnumType.STRING)
+  private Type type;
 
-    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Option> options;
+  @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<Option> options;
 
-    private Long authorID;
+  // -1 predefined (built-in)
+  // -2 part of set
+  @Column(name = "author_id")
+  private Long authorID;
 
-    private String photoUrl;
+  private String photoUrl;
 
-    private String description;
+  private String description;
 
-    private int views;
+  private int views;
 
-    private LocalDateTime created;
+  private LocalDateTime created;
 
-    private Boolean isPublic;
+  private Boolean isPublic;
 
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "category_set_id")
+  private CategorySet categorySet;
 
-    @ManyToMany(mappedBy = "categories")
-    private List<CategorySet> categorySets = new ArrayList<>();
+  public void add(Option option) {
+    if (options == null) this.options = new ArrayList<>();
 
-    public void add(Option option){
-        if(options == null) this.options = new ArrayList<>();
+    options.add(option);
+    option.setCategory(this);
+  }
 
-        options.add(option);
-        option.setCategory(this);
-    }
+  public void remove(Option option) {
+    if (options == null) return;
 
-    public void remove(Option option){
-        if(options == null) return;
+    options.remove(option);
+    option.setCategory(null);
+  }
 
-        options.remove(option);
-        option.setCategory(null);
-    }
 }

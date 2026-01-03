@@ -5,7 +5,7 @@ export type PollResultsMessage = {
 
 export type PollDTO = {
   pollId: number;
-  categoryId: number;
+  category: { setId: number; categoryId: number };
   choices: ChoiceDTO[];
   participantsCount: number;
 };

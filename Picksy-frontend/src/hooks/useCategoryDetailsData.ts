@@ -20,8 +20,8 @@ const useCategoryDetailsData = (id: number) => {
         );
       }
 
-      let author = "Picksy";
-      if (responseCategory.result.authorID) {
+      let author = category?.author || "Picksy";
+      if (responseCategory.result.authorID > 0) {
         const responseUser = await getUser(responseCategory.result.authorID);
         if (responseUser.status !== 200) {
           throw new Error(

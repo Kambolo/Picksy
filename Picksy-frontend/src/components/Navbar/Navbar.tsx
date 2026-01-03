@@ -31,7 +31,7 @@ function Navbar() {
         return [
           ...prev,
           { title: "Własne", to: `/${user.id}/category` },
-          { title: "Stwórz kategorie", to: "/category/create" },
+          { title: "Stwórz kategorię", to: "/category/create" },
           { title: "Stwórz zestaw", to: "/set/create" },
         ];
       });

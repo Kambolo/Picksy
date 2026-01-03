@@ -22,6 +22,7 @@ function ForgotPasswordPage() {
       setStep("code");
     } else {
       if (response.error !== null) {
+        console.log("Error sending code:", response.error);
         setErrorMessage(response.error);
       }
     }

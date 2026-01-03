@@ -6,6 +6,7 @@ import com.picksy.roomservice.model.Room;
 import com.picksy.roomservice.model.SetCategoryKey;
 import com.picksy.roomservice.repository.RoomRepository;
 import com.picksy.roomservice.request.RoomCreateRequest;
+import com.picksy.roomservice.response.PollDTOResponse;
 import com.picksy.roomservice.response.RoomDTO;
 import com.picksy.roomservice.util.MessageType;
 import jakarta.transaction.Transactional;
@@ -27,7 +28,7 @@ public class RoomService {
 
   @Transactional
   public RoomDTO createRoom(RoomCreateRequest request, Long userId) {
-      System.out.println(request.categories().toString());
+    System.out.println(request.categories().toString());
     Room newRoom =
         Room.builder()
             .name(request.name())
@@ -114,18 +115,20 @@ public class RoomService {
     MessageType type = MessageType.NEXT_CATEGORY;
     int currentCategoryIndex = room.get().getCurrentCategoryIndex() + 1;
 
-    SetCategoryKey category = room.get().getCategorySet().get(room.get().getCategorySet().size() - 1);
+    SetCategoryKey category =
+        room.get().getCategorySet().get(room.get().getCategorySet().size() - 1);
+    System.out.println("xd1- " + room.get().getCategorySet().get(currentCategoryIndex));
 
     if (currentCategoryIndex >= room.get().getCategorySet().size()) {
       type = MessageType.VOTING_FINISHED;
       room.get().setRoomClosed(true);
     } else {
       category = room.get().getCategorySet().get(currentCategoryIndex);
+      System.out.println("xd2- " + room.get().getCategorySet().get(currentCategoryIndex));
     }
 
     messagingTemplate.convertAndSend(
-        "/topic/room/" + roomCode,
-        new RoomMessage(type, room.get().getOwnerId(), null, category));
+        "/topic/room/" + roomCode, new RoomMessage(type, room.get().getOwnerId(), null, category));
 
     room.get().setCurrentCategoryIndex(currentCategoryIndex);
     roomRepository.save(room.get());
@@ -208,31 +211,41 @@ public class RoomService {
         "/topic/room/" + roomCode, new RoomMessage(MessageType.VOTING_FINISHED, null, null, null));
   }
 
-  public List<PollDTO> getPolls(String roomCode) throws BadRequestException {
+  public List<PollDTOResponse> getPolls(String roomCode) throws BadRequestException {
     // Get polls from decision service using synchronous communication (block)
     List<PollDTO> pollDTOS = decisionClient.getResults(roomCode).collectList().block();
-    System.out.println("DTOS: " + pollDTOS);
+    System.out.println(pollDTOS);
 
     // Get category ids from room service
     List<SetCategoryKey> categories = roomRepository.findAllSetCategoriesByRoomCode(roomCode);
 
+    List<PollDTOResponse> pollDTOResponses = new ArrayList<>();
+
     for (SetCategoryKey categorySet : categories) {
-
+      System.out.println(categorySet);
       // Check if a poll with this categoryId exists in the results
-      boolean exists = pollDTOS.stream().anyMatch(p -> p.category().equals(categorySet));
+      PollDTO pollDTO =
+          pollDTOS.stream().filter(p -> p.categoryId().equals(categorySet.getCategoryId())).toList().getFirst();
 
-      if (!exists) {
+      if (pollDTO == null) {
         // Create an empty PollDTO for a category that has no voting data
-        pollDTOS.add(
-            new PollDTO(
+        pollDTOResponses.add(
+            new PollDTOResponse(
                 null, // poll id is null because it doesn't exist yet
                 categorySet,
                 null, // or an empty list,
                 0));
+      } else {
+        pollDTOResponses.add(new PollDTOResponse(
+                pollDTO.pollId(),
+                categorySet,
+                pollDTO.choices(),
+                pollDTO.participantsCount()
+        ));
       }
     }
-    System.out.println("after: " + pollDTOS);
-    return pollDTOS;
+    System.out.println(pollDTOResponses);
+    return pollDTOResponses;
   }
 
   public int getParticipantsCount(String roomCode) throws BadRequestException {

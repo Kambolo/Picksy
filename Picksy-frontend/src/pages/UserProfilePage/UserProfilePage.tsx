@@ -116,7 +116,7 @@ const UserProfilePage = () => {
         </div>
 
         <div className="user-profile-categories-section">
-          <h2 className="section-title">Kategorie</h2>
+          <h2 className="section-title-user">Kategorie</h2>
           <CategoryList
             categoryListProps={userCategories}
             isLoading={isLoadingCategories}

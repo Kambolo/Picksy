@@ -35,19 +35,15 @@ export function resetPassword(email: string, code: string, password: string) {
 }
 
 export function logout() {
-  return apiRequest(
-    "auth/logout",
-    "POST",
-    true // secure → wysyła cookies
-  );
+  return apiRequest("auth/logout", "POST", true);
 }
 
 export function getUserFromCookies() {
-  return apiRequest("auth/account/secure/me", "GET", true);
+  return apiRequest("account/secure/me", "GET", true);
 }
 
 export function getUser(id: number) {
-  return apiRequest(`auth/account/public/user/${id}`, "GET");
+  return apiRequest(`account/public/user/${id}`, "GET");
 }
 
 export function getUsers(
@@ -63,13 +59,13 @@ export function getUsers(
   if (ascending !== undefined) params.append("ascending", String(ascending));
   if (pattern) params.append("pattern", pattern);
 
-  const base = pattern ? `auth/account/public/search?` : `auth/account/public?`;
+  const base = pattern ? `account/public/search?` : `account/public?`;
 
   return apiRequest(`${base}${params.toString()}`, "GET");
 }
 
 export function unbanUser(userId: number) {
-  return apiRequest(`auth/account/secure/${userId}/unban`, "PATCH", true);
+  return apiRequest(`account/secure/${userId}/unban`, "PATCH", true);
 }
 
 export function banUser(userId: number, banDays: number | null) {
@@ -83,5 +79,5 @@ export function banUser(userId: number, banDays: number | null) {
 
   const body = { userId, banDate };
 
-  return apiRequest(`auth/account/secure/ban`, "PATCH", true, false, body);
+  return apiRequest(`account/secure/ban`, "PATCH", true, false, body);
 }

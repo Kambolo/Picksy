@@ -137,11 +137,11 @@ const JoinRoom: React.FC = () => {
           </div>
 
           <div className="join-room-footer">
-            <p className="footer-text">
+            <p className="footer-text-room">
               Nie masz kodu pokoju?{" "}
               <button
                 onClick={() => navigate("/room/create")}
-                className="footer-link"
+                className="footer-link-room"
               >
                 Stwórz własny pokój
               </button>

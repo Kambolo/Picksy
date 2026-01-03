@@ -28,7 +28,7 @@ public class User {
     @Enumerated(EnumType.STRING)
     private ROLE role;
 
-    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private ForgotPassword forgotPassword;
 
     @Column(nullable = false)

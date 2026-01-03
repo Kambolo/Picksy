@@ -5,12 +5,15 @@ import com.picksy.categoryservice.exception.ForbiddenAccessException;
 import com.picksy.categoryservice.exception.InvalidRequestException;
 import com.picksy.categoryservice.exception.ResourceNotFoundException;
 import com.picksy.categoryservice.model.Category;
+import com.picksy.categoryservice.model.CategorySet;
 import com.picksy.categoryservice.model.Option;
 import com.picksy.categoryservice.repository.CategoryRepository;
+import com.picksy.categoryservice.repository.CategorySetRepository;
 import com.picksy.categoryservice.request.CategoryBody;
 import com.picksy.categoryservice.response.CategoryDTO;
 import com.picksy.categoryservice.util.enums.Type;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,8 +29,9 @@ public class CategoryService {
 
   private final CategoryRepository categoryRepository;
   private final FileUploadService fileUploadService;
+  private final CategorySetRepository categorySetRepository;
 
-  private final String DEFAUTL_PHOTO_URL =
+  private final String DEFAULT_PHOTO_URL =
       "https://res.cloudinary.com/dctiucda1/image/upload/v1764854844/image_sg0cb3.png";
 
   public CategoryDTO findDTOById(Long id) {
@@ -42,7 +46,7 @@ public class CategoryService {
   }
 
   public Page<CategoryDTO> findAllPublic(Pageable pageable) {
-    return categoryRepository.findAllByIsPublic(true, pageable).map(this::mapToDTO);
+    return categoryRepository.findAllByCategorySetIsNullAndIsPublic(true, pageable).map(this::mapToDTO);
   }
 
   public Page<CategoryDTO> findAllByAuthorID(
@@ -53,18 +57,16 @@ public class CategoryService {
     Page<Category> categories;
 
     if (Boolean.TRUE.equals(isPublic)) {
-      categories = categoryRepository.findAllByAuthorIDAndIsPublic(authorID, true, pageable);
+      categories = categoryRepository.findAllByCategorySetIsNullAndAuthorIDAndIsPublic(authorID, true, pageable);
     } else {
-      categories = categoryRepository.findAllByAuthorID(authorID, pageable);
+      categories = categoryRepository.findAllByCategorySetIsNullAndAuthorID(authorID, pageable);
     }
 
     return categories.map(this::mapToDTO);
   }
 
   public Page<CategoryDTO> findBuiltInCategories(Pageable pageable) {
-    Page<Category> categories = categoryRepository.findByAuthorIDIsNull(pageable);
-
-    return categories.map(this::mapToDTO);
+    return findAllByAuthorID((long)-1, "USER", pageable, (long)-1, true);
   }
 
   public Type findTypeById(Long id) {
@@ -74,7 +76,7 @@ public class CategoryService {
 
   public Page<CategoryDTO> findPublicCategoriesByPattern(String pattern, Pageable pageable) {
     Page<Category> categories =
-        categoryRepository.findAllByIsPublicAndNameContainingIgnoreCase(
+        categoryRepository.findAllByCategorySetIsNullAndIsPublicAndNameContainingIgnoreCase(
             true, pattern.toLowerCase(), pageable);
 
     return categories.map(this::mapToDTO);
@@ -93,11 +95,11 @@ public class CategoryService {
     Page<Category> categories;
     if (Boolean.TRUE.equals(isPublic)) {
       categories =
-          categoryRepository.findAllByAuthorIDAndIsPublicAndNameContainingIgnoreCase(
+          categoryRepository.findAllByCategorySetIsNullAndAuthorIDAndIsPublicAndNameContainingIgnoreCase(
               authorID, true, pattern.toLowerCase(), pageable);
     } else {
       categories =
-          categoryRepository.findAllByAuthorIDAndNameContainingIgnoreCase(
+          categoryRepository.findAllByCategorySetIsNullAndAuthorIDAndNameContainingIgnoreCase(
               authorID, pattern.toLowerCase(), pageable);
     }
 
@@ -115,6 +117,9 @@ public class CategoryService {
     } catch (IllegalArgumentException e) {
       throw new InvalidRequestException("Invalid category type: " + catBody.type());
     }
+    CategorySet set = null;
+    if(catBody.setId() != null)
+        set = categorySetRepository.findById(catBody.setId()).orElseThrow(() -> new ResourceNotFoundException("Category set not found with ID: " + catBody.setId()));
 
     Category category =
         Category.builder()
@@ -122,13 +127,19 @@ public class CategoryService {
             .authorID(userId)
             .type(categoryType)
             .description(catBody.description())
-            .photoUrl(DEFAUTL_PHOTO_URL)
+            .photoUrl(DEFAULT_PHOTO_URL)
             .created(LocalDateTime.now())
+                .categorySet(set)
             .views(0)
             .isPublic(catBody.isPublic())
             .build();
 
     Category savedCategory = categoryRepository.save(category);
+
+    if(set != null){
+        set.add(savedCategory);
+        categorySetRepository.save(set);
+    }
 
     return mapToDTO(savedCategory);
   }
@@ -188,7 +199,7 @@ public class CategoryService {
     category.setPhotoUrl(null);
     categoryRepository.save(category);
 
-    if (filePath != null && !filePath.equals(DEFAUTL_PHOTO_URL)) {
+    if (filePath != null && !filePath.equals(DEFAULT_PHOTO_URL)) {
       fileUploadService.removeImage(filePath);
     }
   }

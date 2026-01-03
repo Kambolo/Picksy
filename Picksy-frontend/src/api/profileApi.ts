@@ -16,7 +16,7 @@ export function changeProfileBio(bio: string) {
 }
 
 export function changeUserDetails(id: number, username: string, email: string) {
-  return apiRequest(`auth/account/secure/details`, "PATCH", true, false, {
+  return apiRequest(`account/secure/details`, "PATCH", true, false, {
     id,
     username,
     email,
@@ -27,5 +27,3 @@ export function getProfiles(ids: number[]) {
   const query = ids.map((id) => `ids=${id}`).join("&");
   return apiRequest(`api/profile/public?${query}`);
 }
-
-

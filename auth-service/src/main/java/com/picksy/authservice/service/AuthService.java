@@ -49,15 +49,13 @@ public class AuthService {
   private final KafkaTemplate<String, UserProfileMessage> kafkaTemplate;
 
   public UserDTO authenticateUser(UserSignInBody user, HttpServletResponse response) {
-
     User savedUser = userRepository.findByEmailIgnoreCase(user.email());
     if (savedUser == null) {
       throw new UserNotFoundException("Invalid email or password");
     }
 
     if (savedUser.getIsBanned()) {
-      // If bannedUntil is set to null it means that user is banned forever
-      if (savedUser.getBannedUntil() == null) {
+      if (savedUser.getBannedUntil() == LocalDateTime.MAX) {
         throw new UserBannedException("User is banned until: forever");
       }
       // If ban time passed unban user
@@ -96,6 +94,7 @@ public class AuthService {
         savedUser.getId(), savedUser.getUsername(), savedUser.getEmail(), savedUser.getRole(), savedUser.getIsBanned());
   }
 
+  @Transactional
   public String registerUser(UserSignUpBody user) {
 
     if (userRepository.existsByUsernameIgnoreCase(user.username())) {

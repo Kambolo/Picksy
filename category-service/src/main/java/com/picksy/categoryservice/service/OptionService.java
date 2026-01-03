@@ -12,7 +12,8 @@ import com.picksy.categoryservice.request.OptionBody;
 import com.picksy.categoryservice.response.CategoryDTO;
 import com.picksy.categoryservice.response.CategoryWithOptionsDTO;
 import com.picksy.categoryservice.response.OptionDTO;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,7 +31,7 @@ public class OptionService {
     private final FileUploadService fileUploadService;
 
     private final String DEFAULT_PHOTO_URL =
-            "https://res.cloudinary.com/dctiucda1/image/upload/v1764698183/image_zaopfn.png";
+            "https://res.cloudinary.com/dctiucda1/image/upload/v1766408430/default_suo7u0.png";
 
     public Option findById(Long id) {
         return optionRepository

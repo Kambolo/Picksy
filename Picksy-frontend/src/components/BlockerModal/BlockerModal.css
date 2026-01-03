@@ -20,6 +20,7 @@
 .modal-text {
   margin-bottom: 16px;
   font-weight: 600;
+  white-space: pre-line;
 }
 
 .modal-buttons {

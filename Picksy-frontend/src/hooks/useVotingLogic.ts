@@ -10,7 +10,10 @@ export const useVotingLogic = (
   category: Category,
   isOwner: boolean,
   participantsCount: number,
-  currentCategory: number
+  currentCategory: number,
+  nextCategory: () => void,
+  categoriesCount: number,
+  endVoting: () => void
 ) => {
   const [hasVoted, setHasVoted] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
@@ -48,6 +51,14 @@ export const useVotingLogic = (
       votedCount,
     });
   }, [hasVoted, hasStarted, matchedId, hasOptionsEnded, votedCount]);
+
+  // go to next category if everyone voted
+  useEffect(() => {
+    if (isOwner && hasStarted && participantsCount === votedCount) {
+      if (currentCategory < categoriesCount - 1) nextCategory();
+      else endVoting();
+    }
+  }, [votedCount, participantsCount, isOwner, hasStarted, nextCategory]);
 
   const {
     isConnected,
