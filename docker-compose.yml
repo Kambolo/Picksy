@@ -4,7 +4,7 @@ services:
   # --- Frontend ---
   frontend:
     build:
-      context: ./Picksy-frontend
+      context: ./frontend
       target: dev
     ports:
       - "${FRONTEND_PORT}:5173"
@@ -14,7 +14,7 @@ services:
 
   # --- Eureka Server ---
   eureka-server:
-    build: ./eureka-server
+    build: ./backend/eureka-server
     ports:
       - "${SERVER_PORT_EUREKASERVER}:8761"
     networks:
@@ -22,7 +22,9 @@ services:
 
   # --- API Gateway ---
   api-gateway:
-    build: ./api-gateway
+    build:
+      context: ./backend/api-gateway
+      dockerfile: ./Dockerfile
     ports:
       - "${SERVER_PORT_APIGATEWAY}:8080"
     environment:
@@ -41,7 +43,7 @@ services:
     # The common-dto is needed for this service so context must be .
     # in order to copy it
     build:
-      context: .
+      context: ./backend
       dockerfile: ./auth-service/Dockerfile
     ports:
       - "${SERVER_PORT_AUTHSERVICE}:8080"
@@ -65,8 +67,8 @@ services:
     ports:
       - "${POSTGRES_PORT_AUTHSERVICE}:5432"
     volumes:
-      - ./auth-service/postgres:/var/lib/postgresql/data
-      - ./auth-service/init/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./backend/auth-service/postgres:/var/lib/postgresql/data
+      - ./backend/auth-service/init/init.sql:/docker-entrypoint-initdb.d/init.sql
     environment:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD_AUTHSERVICE}
       - POSTGRES_USER=${POSTGRES_USER_AUTHSERVICE}
@@ -77,7 +79,9 @@ services:
 
   # --- Category Service ---
   category-service:
-    build: ./category-service
+    build:
+      context: ./backend/category-service
+      dockerfile: ./Dockerfile
     ports:
       - "${SERVER_PORT_CATEGORYSERVICE}:8080"
     environment:
@@ -99,8 +103,8 @@ services:
     ports:
       - "${POSTGRES_PORT_CATEGORYSERVICE}:5432"
     volumes:
-      - ./category-service/postgres:/var/lib/postgresql/data
-      - ./category-service/init/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./backend/category-service/postgres:/var/lib/postgresql/data
+      - ./backend/category-service/init/init.sql:/docker-entrypoint-initdb.d/init.sql
     environment:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD_CATEGORYSERVICE}
       - POSTGRES_USER=${POSTGRES_USER_CATEGORYSERVICE}
@@ -111,7 +115,7 @@ services:
   # --- User Service ---
   user-service:
     build:
-      context: .
+      context: ./backend
       dockerfile: ./user-service/Dockerfile
     ports:
       - "${SERVER_PORT_USERSERVICE}:8080"
@@ -133,8 +137,8 @@ services:
     ports:
       - "${POSTGRES_PORT_USERSERVICE}:5432"
     volumes:
-      - ./user-service/postgres:/var/lib/postgresql/data
-      - ./user-service/init/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./backend/user-service/postgres:/var/lib/postgresql/data
+      - ./backend/user-service/init/init.sql:/docker-entrypoint-initdb.d/init.sql
     environment:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD_USERSERVICE}
       - POSTGRES_USER=${POSTGRES_USER_USERSERVICE}
@@ -143,7 +147,9 @@ services:
       - server-network
 
   room-service:
-    build: ./room-service
+    build:
+      context: ./backend/room-service
+      dockerfile: ./Dockerfile
     ports:
       - "${SERVER_PORT_ROOMSERVICE}:8080"
     environment:
@@ -160,8 +166,8 @@ services:
     ports:
       - "${POSTGRES_PORT_ROOMSERVICE}:5432"
     volumes:
-      - ./room-service/postgres:/var/lib/postgresql/data
-      - ./room-service/init:/docker-entrypoint-initdb.d
+      - ./backend/room-service/postgres:/var/lib/postgresql/data
+      - ./backend/room-service/init:/docker-entrypoint-initdb.d
     environment:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD_ROOMSERVICE}
       - POSTGRES_USER=${POSTGRES_USER_ROOMSERVICE}
@@ -170,7 +176,9 @@ services:
       - server-network
 
   decision-service:
-    build: ./decision-service
+    build:
+      context: ./backend/decision-service
+      dockerfile: ./Dockerfile
     ports:
       - "${SERVER_PORT_DECISIONSERVICE}:8080"
     environment:
@@ -187,8 +195,8 @@ services:
     ports:
       - "${POSTGRES_PORT_DECISIONSERVICE}:5432"
     volumes:
-      - ./decision-service/postgres:/var/lib/postgresql/data
-      - ./decision-service/init:/docker-entrypoint-initdb.d
+      - ./backend/decision-service/postgres:/var/lib/postgresql/data
+      - ./backend/decision-service/init:/docker-entrypoint-initdb.d
     environment:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD_DECISIONSERVICE}
       - POSTGRES_USER=${POSTGRES_USER_DECISIONSERVICE}
