@@ -35,6 +35,7 @@ docker-compose.override.yml
 **/postgres_data/
 **/pgdata/
 **/data/postgres/
+**/postgres/
 backend/**/data/
 
 # ------------------------
