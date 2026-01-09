@@ -17,14 +17,29 @@ Thumbs.db
 # Environment files
 # ------------------------
 .env
+.env.*
+!.env.example
 
-#-------------------------
+# ------------------------
 # Node files
 # ------------------------
-./frontend/node_modules/
+**/node_modules/
 
 # ------------------------
-# Docker
+# Docker & Database (Postgres)
 # ------------------------
 *.dockerfile
 docker-compose.override.yml
+
+# Ignorowanie danych bazy danych
+**/postgres_data/
+**/pgdata/
+**/data/postgres/
+backend/**/data/
+
+# ------------------------
+# Build & Logs
+# ------------------------
+**/target/
+**/build/
+*.log
