@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { ImSpinner } from "react-icons/im";
 import { createSet } from "../../api/categoryApi";
 import Navbar from "../../components/Navbar/Navbar";
@@ -11,7 +11,7 @@ const CreateSetPage = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleFormSubmit = async (e: React.FormEvent) => {
+  const handleFormSubmit = async () => {
     setIsLoading(true);
     const response = await createSet(title, isPublic);
     if (response.error) {

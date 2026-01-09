@@ -1,5 +1,8 @@
 package com.picksy.categoryservice.service;
 
+import com.picksy.DeletionEvent;
+import com.picksy.TypeUpdateEvent;
+import com.picksy.UserProfileMessage;
 import com.picksy.categoryservice.exception.FileUploadException;
 import com.picksy.categoryservice.exception.ForbiddenAccessException;
 import com.picksy.categoryservice.exception.InvalidRequestException;
@@ -12,7 +15,9 @@ import com.picksy.categoryservice.repository.CategorySetRepository;
 import com.picksy.categoryservice.request.CategoryBody;
 import com.picksy.categoryservice.response.CategoryDTO;
 import com.picksy.categoryservice.util.enums.Type;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.transaction.annotation.Transactional;
+
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -23,6 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.net.MalformedURLException;
 import java.time.LocalDateTime;
 
+
 @Service
 @RequiredArgsConstructor
 public class CategoryService {
@@ -30,6 +36,10 @@ public class CategoryService {
   private final CategoryRepository categoryRepository;
   private final FileUploadService fileUploadService;
   private final CategorySetRepository categorySetRepository;
+
+  private static final String TOPIC = "category-deletion-topic";
+  private static final String TYPE_UPDATE_TOPIC = "category-type-update-topic";
+  private final KafkaTemplate<String, Object> kafkaTemplate;
 
   private final String DEFAULT_PHOTO_URL =
       "https://res.cloudinary.com/dctiucda1/image/upload/v1764854844/image_sg0cb3.png";
@@ -46,7 +56,9 @@ public class CategoryService {
   }
 
   public Page<CategoryDTO> findAllPublic(Pageable pageable) {
-    return categoryRepository.findAllByCategorySetIsNullAndIsPublic(true, pageable).map(this::mapToDTO);
+    return categoryRepository
+        .findAllByCategorySetIsNullAndIsPublic(true, pageable)
+        .map(this::mapToDTO);
   }
 
   public Page<CategoryDTO> findAllByAuthorID(
@@ -57,7 +69,9 @@ public class CategoryService {
     Page<Category> categories;
 
     if (Boolean.TRUE.equals(isPublic)) {
-      categories = categoryRepository.findAllByCategorySetIsNullAndAuthorIDAndIsPublic(authorID, true, pageable);
+      categories =
+          categoryRepository.findAllByCategorySetIsNullAndAuthorIDAndIsPublic(
+              authorID, true, pageable);
     } else {
       categories = categoryRepository.findAllByCategorySetIsNullAndAuthorID(authorID, pageable);
     }
@@ -66,7 +80,7 @@ public class CategoryService {
   }
 
   public Page<CategoryDTO> findBuiltInCategories(Pageable pageable) {
-    return findAllByAuthorID((long)-1, "USER", pageable, (long)-1, true);
+    return findAllByAuthorID((long) -1, "USER", pageable, (long) -1, true);
   }
 
   public Type findTypeById(Long id) {
@@ -95,8 +109,9 @@ public class CategoryService {
     Page<Category> categories;
     if (Boolean.TRUE.equals(isPublic)) {
       categories =
-          categoryRepository.findAllByCategorySetIsNullAndAuthorIDAndIsPublicAndNameContainingIgnoreCase(
-              authorID, true, pattern.toLowerCase(), pageable);
+          categoryRepository
+              .findAllByCategorySetIsNullAndAuthorIDAndIsPublicAndNameContainingIgnoreCase(
+                  authorID, true, pattern.toLowerCase(), pageable);
     } else {
       categories =
           categoryRepository.findAllByCategorySetIsNullAndAuthorIDAndNameContainingIgnoreCase(
@@ -118,8 +133,14 @@ public class CategoryService {
       throw new InvalidRequestException("Invalid category type: " + catBody.type());
     }
     CategorySet set = null;
-    if(catBody.setId() != null)
-        set = categorySetRepository.findById(catBody.setId()).orElseThrow(() -> new ResourceNotFoundException("Category set not found with ID: " + catBody.setId()));
+    if (catBody.setId() != null)
+      set =
+          categorySetRepository
+              .findById(catBody.setId())
+              .orElseThrow(
+                  () ->
+                      new ResourceNotFoundException(
+                          "Category set not found with ID: " + catBody.setId()));
 
     Category category =
         Category.builder()
@@ -129,16 +150,16 @@ public class CategoryService {
             .description(catBody.description())
             .photoUrl(DEFAULT_PHOTO_URL)
             .created(LocalDateTime.now())
-                .categorySet(set)
+            .categorySet(set)
             .views(0)
             .isPublic(catBody.isPublic())
             .build();
 
     Category savedCategory = categoryRepository.save(category);
 
-    if(set != null){
-        set.add(savedCategory);
-        categorySetRepository.save(set);
+    if (set != null) {
+      set.add(savedCategory);
+      categorySetRepository.save(set);
     }
 
     return mapToDTO(savedCategory);
@@ -180,6 +201,7 @@ public class CategoryService {
     removeImgInternal(userId, role, id, category);
 
     categoryRepository.delete(category);
+    kafkaTemplate.send(TOPIC, new DeletionEvent(id, "CATEGORY"));
   }
 
   @Transactional
@@ -222,8 +244,11 @@ public class CategoryService {
     }
     if (categoryBody.type() != null) {
       try {
-        Type type = Type.valueOf(categoryBody.type());
-        category.setType(type);
+          Type newType = Type.valueOf(categoryBody.type());
+          if (!category.getType().equals(newType)) {
+              category.setType(newType);
+              kafkaTemplate.send(TYPE_UPDATE_TOPIC, new TypeUpdateEvent(id, newType.name()));
+          }
       } catch (IllegalArgumentException e) {
         throw new InvalidRequestException("Invalid category type: " + categoryBody.type());
       }

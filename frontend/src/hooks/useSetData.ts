@@ -40,20 +40,30 @@ export const useSetData = (
     const author = await fetchAuthorName(response.authorId);
 
     const categories: CategoryCardProps[] = await Promise.all(
-      response.categories.map(async (cat) => {
-        return {
-          id: cat.id,
-          img: cat.photoURL,
-          title: cat.name,
-          author: author,
-          authorId: response.authorId,
-          description: cat.description,
-          type: cat.type,
-          views: cat.views,
-          isPublic: cat.isPublic,
-          showIsPublic: false,
-        };
-      })
+      response.categories.map(
+        async (cat: {
+          id: number;
+          photoURL: string;
+          name: string;
+          description: string;
+          type: string;
+          views: number;
+          isPublic: boolean;
+        }) => {
+          return {
+            id: cat.id,
+            img: cat.photoURL,
+            title: cat.name,
+            author: author,
+            authorId: response.authorId,
+            description: cat.description,
+            type: cat.type,
+            views: cat.views,
+            isPublic: cat.isPublic,
+            showIsPublic: false,
+          };
+        }
+      )
     );
 
     const setInfo: SetInfo = {

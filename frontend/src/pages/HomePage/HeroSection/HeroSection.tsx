@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import "./HeroSection.css";
+import screenImage from "../../../assets/Screen1.png";
 
 const HeroSection = () => {
   const navigate = useNavigate();
@@ -35,7 +36,7 @@ const HeroSection = () => {
           </button>
         </div>
         <div className="hero-image">
-          <img src="/src/assets/Screen1.png" alt="screen" />
+          <img src={screenImage} alt="screen" />
         </div>
       </div>
     </section>

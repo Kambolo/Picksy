@@ -1,5 +1,6 @@
 package com.picksy.categoryservice.service;
 
+import com.picksy.DeletionEvent;
 import com.picksy.categoryservice.exception.ForbiddenAccessException;
 import com.picksy.categoryservice.exception.InvalidRequestException;
 import com.picksy.categoryservice.exception.ResourceNotFoundException;
@@ -11,6 +12,7 @@ import com.picksy.categoryservice.request.CreateCategorySetBody;
 import com.picksy.categoryservice.request.UpdateCategorySetBody;
 import com.picksy.categoryservice.response.CategoryDTO;
 import com.picksy.categoryservice.response.CategorySetDTO;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
@@ -29,6 +31,9 @@ public class CategorySetService {
   private final CategorySetRepository categorySetRepository;
   private final CategoryService categoryService;
   private final CategoryRepository categoryRepository;
+
+    private static final String TOPIC = "category-deletion-topic";
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
   @Transactional
   public CategorySetDTO create(Long userId, CreateCategorySetBody createCategorySetBody) {
@@ -70,6 +75,7 @@ public class CategorySetService {
 
     checkAuthor(userId, role, categorySet);
     categorySetRepository.delete(categorySet);
+      kafkaTemplate.send(TOPIC, new DeletionEvent(setId, "SET"));
   }
 
   public CategorySetDTO findSetWithCategories(Long setId) {

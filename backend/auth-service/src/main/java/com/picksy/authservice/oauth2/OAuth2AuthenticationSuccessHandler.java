@@ -20,7 +20,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
   private final OAuth2UserProcessorService oAuth2UserProcessorService;
 
   // frontend redirect
-  private final String FRONTEND_REDIRECT = "http://localhost:5173/oauth2/callback";
+  private final String FRONTEND_REDIRECT = "http://localhost/oauth2/callback";
 
   @Override
   public void onAuthenticationSuccess(

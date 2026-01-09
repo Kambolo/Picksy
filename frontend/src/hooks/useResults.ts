@@ -32,6 +32,7 @@ export const useResults = ({
         }
 
         const results: PollDTO[] = resultResponse.result;
+        console.log(results);
 
         const responses = await Promise.all(
           results.map(async (r: PollDTO) => {
@@ -41,7 +42,7 @@ export const useResults = ({
             if (categoryResponse.status !== 200) {
               setError("Błąd podczas pobierania danych kategorii");
               setLoading(false);
-              return;
+              return null;
             }
 
             const setResponse =
@@ -60,13 +61,15 @@ export const useResults = ({
               setLoading(false);
               return;
             }
-            console.log({ ...categoryResponse.result, ...setResponse.result });
 
             return { ...categoryResponse.result, ...setResponse.result };
           })
         );
+        console.log(responses);
 
         const mapped: ResultCategory[] = responses.map((response) => {
+          if (!response) return null;
+
           const categoryDTO = response.categoryDTO;
           const optionDTOs = response.optionDTOs;
 
@@ -87,6 +90,7 @@ export const useResults = ({
                 ?.count,
             }));
           }
+
           return {
             ...categoryDTO,
             options,
@@ -98,9 +102,7 @@ export const useResults = ({
 
         setCategories(mapped);
       } catch (e: any) {
-        setError(
-          "Kategorie lub zestawy należące do tego pokoju zostały usunięte :/"
-        );
+        setError("Wystąpił błąd podczas pobierania wyników: " + e.message);
       } finally {
         setLoading(false);
       }

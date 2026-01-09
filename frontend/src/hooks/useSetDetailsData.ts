@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getUser } from "../api/authApi";
-import { createCategory, getSetById } from "../api/categoryApi";
+import { getSetById } from "../api/categoryApi";
 import type { CategoryCardProps } from "../components/CategoryCard/CategoryCard";
 import type { SetInfo } from "../types/Set";
 

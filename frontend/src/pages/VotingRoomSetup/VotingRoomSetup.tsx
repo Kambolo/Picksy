@@ -16,7 +16,6 @@ const VotingRoomSetup: React.FC = () => {
     roomName,
     setRoomName,
     categories,
-    sets,
     removeCategory,
     removeSet,
     handleCreateRoom,

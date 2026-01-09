@@ -4,7 +4,6 @@ import { useUser } from "../context/userContext";
 import { useCategoryUI } from "./useCategoryUIContext";
 import { useRoomSetup } from "./useRoomSetup";
 import type { CategoryCardProps } from "../components/CategoryCard/CategoryCard";
-import { useState } from "react";
 
 export const useSetSelection = (
   availableSets: SetCardProps[],

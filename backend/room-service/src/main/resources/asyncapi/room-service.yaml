@@ -14,19 +14,6 @@ servers:
     description: Development server using SockJS + STOMP
 
 channels:
-  roomActionChannel:
-    address: /app/public/room/{roomCode}/{action}
-    parameters:
-      roomCode:
-        description: Unique 7-digit code of the room.
-      action:
-        description: The action to perform.
-        enum: [join, leave]
-    messages:
-      sendRoomAction:
-        $ref: '#/components/messages/RoomMessage'
-    description: Endpoint for participants to join or leave the room.
-
   roomTopicChannel:
     address: /topic/room/{roomCode}
     parameters:
@@ -38,12 +25,6 @@ channels:
     description: Broadcast topic for all room-related events (state changes, new users).
 
 operations:
-  participantAction:
-    action: receive
-    channel:
-      $ref: '#/channels/roomActionChannel'
-    summary: Participant joins or leaves the room via WebSocket.
-
   roomBroadcast:
     action: send
     channel:

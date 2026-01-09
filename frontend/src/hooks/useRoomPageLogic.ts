@@ -5,7 +5,13 @@ import {
   getCategoryOptions,
   getSetById,
 } from "../api/categoryApi";
-import { endVoting, nextCategory, startVoting } from "../api/roomApi";
+import {
+  endVoting,
+  joinRoom,
+  leaveRoom,
+  nextCategory,
+  startVoting,
+} from "../api/roomApi";
 import { useUser } from "../context/userContext";
 import type { Option } from "../types/Option";
 import type { Participant } from "../types/Participant";
@@ -20,7 +26,7 @@ import type { SetInfo } from "../types/Set";
 export const useRoomPageLogic = () => {
   const { roomCode } = useParams<{ roomCode: string }>();
   const navigate = useNavigate();
-  const { user } = useUser();
+  const { user, setUser } = useUser();
   const location = useLocation();
   const categoriesCount = location.state?.categoriesCount;
 
@@ -124,76 +130,75 @@ export const useRoomPageLogic = () => {
   ]);
 
   // WebSocket
-  const {
-    isConnected,
-    joinRoom,
-    leaveRoom,
-    error: wsError,
-  } = useRoomWebSocket(roomCode, async (message) => {
-    switch (message.type) {
-      case "JOIN":
-        const photoUrl = await fetchPhotoUrl(message.userId);
-        setDynamicParticipants((prev) =>
-          prev.some((p) => p.id === message.userId)
-            ? prev
-            : [
-                ...prev,
-                { id: message.userId, username: message.username, photoUrl },
-              ]
-        );
-        if (participant?.id === message.userId) setHasJoined(true);
-        break;
-
-      case "LEAVE":
-        setDynamicParticipants((prev) =>
-          prev.filter((p) => p.id !== message.userId)
-        );
-        break;
-
-      case "ROOM_CLOSED":
-        clearState(`roomState-${roomCode}`);
-        clearState(`votingState-${roomCode}-${categoryIdRef.current}`);
-        clearState(`swipeVoting-${roomCode}-${categoryIdRef.current}`);
-        clearState(`pickVoting-${roomCode}-${categoryIdRef.current}`);
-        setIsRoomClosed(true);
-        break;
-
-      case "VOTING_STARTED":
-      case "NEXT_CATEGORY":
-        if (!message.category) break;
-        clearState(`votingState-${roomCode}-${categoryIdRef.current}`);
-        clearState(`swipeVoting-${roomCode}-${categoryIdRef.current}`);
-        clearState(`pickVoting-${roomCode}-${categoryIdRef.current}`);
-        setCategoryId(message.category.categoryId);
-        loadCategory(message.category.categoryId);
-        if (message.category.setId !== -1) loadSet(message.category.setId);
-        else setCurrentSet(null);
-        if (message.type === "NEXT_CATEGORY")
-          setCurrentCategoryIndex((prev) => prev + 1);
-        break;
-
-      case "VOTING_FINISHED":
-        clearState(`votingState-${roomCode}-${categoryIdRef.current}`);
-        clearState(`swipeVoting-${roomCode}-${categoryIdRef.current}`);
-        clearState(`pickVoting-${roomCode}-${categoryIdRef.current}`);
-
-        setCategoryId(-1);
-        setCurrentCategory(null);
-
-        // get voting results
-        if (!roomCode) {
-          setError("Wystapił błąd");
+  const { isConnected, error: wsError } = useRoomWebSocket(
+    roomCode,
+    async (message) => {
+      switch (message.type) {
+        case "JOIN":
+          const photoUrl = await fetchPhotoUrl(message.userId);
+          setDynamicParticipants((prev) =>
+            prev.some((p) => p.id === message.userId)
+              ? prev
+              : [
+                  ...prev,
+                  { id: message.userId, username: message.username, photoUrl },
+                ]
+          );
+          if (participant?.id === message.userId) setHasJoined(true);
           break;
-        }
-        setShowResults(true);
-        break;
+
+        case "LEAVE":
+          setDynamicParticipants((prev) =>
+            prev.filter((p) => p.id !== message.userId)
+          );
+          break;
+
+        case "ROOM_CLOSED":
+          clearState(`roomState-${roomCode}`);
+          clearState(`votingState-${roomCode}-${categoryIdRef.current}`);
+          clearState(`swipeVoting-${roomCode}-${categoryIdRef.current}`);
+          clearState(`pickVoting-${roomCode}-${categoryIdRef.current}`);
+          setIsRoomClosed(true);
+          break;
+
+        case "VOTING_STARTED":
+        case "NEXT_CATEGORY":
+          if (!message.category) break;
+          clearState(`votingState-${roomCode}-${categoryIdRef.current}`);
+          clearState(`swipeVoting-${roomCode}-${categoryIdRef.current}`);
+          clearState(`pickVoting-${roomCode}-${categoryIdRef.current}`);
+          setCategoryId(message.category.categoryId);
+          loadCategory(message.category.categoryId);
+          if (message.category.setId !== -1) loadSet(message.category.setId);
+          else setCurrentSet(null);
+          if (message.type === "NEXT_CATEGORY")
+            setCurrentCategoryIndex((prev) => prev + 1);
+          break;
+
+        case "VOTING_FINISHED":
+          clearState(`votingState-${roomCode}-${categoryIdRef.current}`);
+          clearState(`swipeVoting-${roomCode}-${categoryIdRef.current}`);
+          clearState(`pickVoting-${roomCode}-${categoryIdRef.current}`);
+
+          setCategoryId(-1);
+          setCurrentCategory(null);
+
+          // get voting results
+          if (!roomCode) {
+            setError("Wystapił błąd");
+            break;
+          }
+          setShowResults(true);
+          break;
+      }
     }
-  });
+  );
 
   // leave room
   const handleLeaveRoom = () => {
-    if (isConnected && hasJoined && participant?.id)
-      leaveRoom(participant.id, participant.username);
+    if (isConnected && hasJoined && participant?.id) {
+      leaveRoom(roomCode || "", participant.id, participant.username);
+    }
     clearState(`roomState-${roomCode}`); //clear room state
     setHasJoined(false);
     setParticipant(null);
@@ -239,7 +244,8 @@ export const useRoomPageLogic = () => {
       [isConnected, hasJoined, participant, isRoomClosed, isLeaving],
       () => {
         if (isConnected && hasJoined && participant?.id) {
-          leaveRoom(participant.id, participant.username);
+          leaveRoom(roomCode || "", participant.id, participant.username);
+          user && user.id < 0 && setUser(null);
         }
 
         clearState(`roomState-${roomCode}`); //clear room state on leave
@@ -277,7 +283,6 @@ export const useRoomPageLogic = () => {
         title: response.result.name,
         author: "Picksy",
         authorId: response.result.authorId,
-        categoryCount: response.result.categories.length,
         isPublic: response.result.isPublic,
         views: response.result.views,
         showIsPublic: false,
@@ -290,15 +295,37 @@ export const useRoomPageLogic = () => {
   // join on load and only if it is the first render skip refresh
   useEffect(() => {
     if (isRestoring) return;
+
     if (!hasJoined && isConnected) {
-      let username = location.state?.username || "Guest";
-      let id = location.state?.id || user?.id || null;
+      let username = user ? user.username : "Gość";
+      let id = user ? user.id : -Math.floor(Math.random() * 1000000);
       if (user) username = user.username;
-      setParticipant({ id, username });
-      const timeout = setTimeout(() => {
-        joinRoom(username, id);
+
+      const timeout = setTimeout(async () => {
+        const response = await joinRoom(roomCode || "", id, username);
+        if (response.status !== 200) {
+          setError(response.error || "Błąd podczas dołączania do pokoju");
+          setHasJoined(false);
+          return;
+        }
+        !user ||
+          (user &&
+            user.id < 0 &&
+            setUser({
+              id: response.result,
+              username,
+              email: "",
+              isBlocked: false,
+              role: "USER",
+            }));
+
+        setParticipant({
+          id: id === -1 ? response.result : id,
+          username,
+        });
         setHasJoined(true);
       }, 20);
+
       return () => clearTimeout(timeout);
     }
   }, [isConnected, isRestoring, hasJoined]);

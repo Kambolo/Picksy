@@ -6,6 +6,7 @@ import com.picksy.roomservice.model.Room;
 import com.picksy.roomservice.model.SetCategoryKey;
 import com.picksy.roomservice.repository.RoomRepository;
 import com.picksy.roomservice.request.RoomCreateRequest;
+import com.picksy.roomservice.request.RoomUserInfo;
 import com.picksy.roomservice.response.PollDTOResponse;
 import com.picksy.roomservice.response.RoomDTO;
 import com.picksy.roomservice.util.MessageType;
@@ -17,6 +18,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 @RequiredArgsConstructor
@@ -28,7 +31,6 @@ public class RoomService {
 
   @Transactional
   public RoomDTO createRoom(RoomCreateRequest request, Long userId) {
-    System.out.println(request.categories().toString());
     Room newRoom =
         Room.builder()
             .name(request.name())
@@ -98,8 +100,6 @@ public class RoomService {
             null,
             room.get().getCategorySet().get(currentCategoryIndex)));
 
-    System.out.println("xd- " + room.get().getCategorySet().get(currentCategoryIndex));
-
     room.get().setCurrentCategoryIndex(currentCategoryIndex);
     roomRepository.save(room.get());
   }
@@ -117,14 +117,12 @@ public class RoomService {
 
     SetCategoryKey category =
         room.get().getCategorySet().get(room.get().getCategorySet().size() - 1);
-    System.out.println("xd1- " + room.get().getCategorySet().get(currentCategoryIndex));
 
     if (currentCategoryIndex >= room.get().getCategorySet().size()) {
       type = MessageType.VOTING_FINISHED;
       room.get().setRoomClosed(true);
     } else {
       category = room.get().getCategorySet().get(currentCategoryIndex);
-      System.out.println("xd2- " + room.get().getCategorySet().get(currentCategoryIndex));
     }
 
     messagingTemplate.convertAndSend(
@@ -135,18 +133,31 @@ public class RoomService {
   }
 
   @Transactional
-  public void joinRoom(String roomCode, RoomMessage roomMessage) throws BadRequestException {
-    if (!roomRepository.existsByRoomCode(roomCode))
-      throw new BadRequestException("Room does not exist.");
-    System.out.println("Room code : " + roomCode);
-    Room room = roomRepository.findByRoomCode(roomCode).get();
+  public Long joinRoom(String roomCode, RoomUserInfo userInfo) throws BadRequestException {
+    Optional<Room> optionalRoom = roomRepository.findByRoomCode(roomCode);
+
+    if (optionalRoom.isEmpty()) throw new BadRequestException("Room does not exist");
+
+    Room room = optionalRoom.get();
 
     if (room.isRoomClosed()) throw new BadRequestException("Room is closed.");
     if (room.isVotingStarted()) throw new BadRequestException("Voting has already started.");
 
-    Map.Entry<Long, String> newParticipant =
-        room.addParticipant(roomMessage.getUserId(), roomMessage.getUsername());
-    System.out.println(roomMessage);
+    Long userId = userInfo.userId();
+
+    // If user is not logged (userId == -1), generate random negative UUID
+    if (userId < 0) {
+        long maxSafeJS = 9007199254740991L;
+      do {
+          userId = -ThreadLocalRandom.current().nextLong(1, maxSafeJS);
+      } while (room.getParticipants().containsKey(userId));
+    } else {
+      if (room.getParticipants().containsKey(userId)) {
+        throw new BadRequestException("You have already joined this room.");
+      }
+    }
+
+    Map.Entry<Long, String> newParticipant = room.addParticipant(userId, userInfo.username());
 
     roomRepository.save(room);
 
@@ -154,6 +165,8 @@ public class RoomService {
         "/topic/room/" + roomCode,
         new RoomMessage(
             MessageType.JOIN, newParticipant.getKey(), newParticipant.getValue(), null));
+
+    return newParticipant.getKey();
   }
 
   public RoomDTO getRoomDetails(String roomCode) throws BadRequestException {
@@ -172,14 +185,19 @@ public class RoomService {
   }
 
   @Transactional
-  public void leaveRoom(String roomCode, RoomMessage roomMessage) throws BadRequestException {
-    if (!roomRepository.existsByRoomCode(roomCode))
-      throw new BadRequestException("Room does not exist.");
+  public void leaveRoom(String roomCode, RoomUserInfo userInfo) throws BadRequestException {
+    Optional<Room> optionalRoom = roomRepository.findByRoomCode(roomCode);
 
-    Room room = roomRepository.findByRoomCode(roomCode).get();
+    if (optionalRoom.isEmpty()) throw new BadRequestException("Room does not exist");
+
+    Room room = optionalRoom.get();
+
+    if (!room.getParticipants().containsKey(userInfo.userId())) {
+      throw new BadRequestException("You have not joined this room.");
+    }
 
     // When owner exits before end
-    if (Objects.equals(roomMessage.getUserId(), room.getOwnerId())) {
+    if (Objects.equals(userInfo.userId(), room.getOwnerId())) {
       messagingTemplate.convertAndSend(
           "/topic/room/" + roomCode,
           new RoomMessage(MessageType.ROOM_CLOSED, room.getOwnerId(), null, null));
@@ -188,12 +206,12 @@ public class RoomService {
       return;
     }
 
-    room.removeParticipant(roomMessage.getUserId());
+    room.removeParticipant(userInfo.userId());
     roomRepository.save(room);
 
     messagingTemplate.convertAndSend(
         "/topic/room/" + roomCode,
-        new RoomMessage(MessageType.LEAVE, roomMessage.getUserId(), null, null));
+        new RoomMessage(MessageType.LEAVE, userInfo.userId(), null, null));
   }
 
   @Transactional
@@ -214,7 +232,6 @@ public class RoomService {
   public List<PollDTOResponse> getPolls(String roomCode) throws BadRequestException {
     // Get polls from decision service using synchronous communication (block)
     List<PollDTO> pollDTOS = decisionClient.getResults(roomCode).collectList().block();
-    System.out.println(pollDTOS);
 
     // Get category ids from room service
     List<SetCategoryKey> categories = roomRepository.findAllSetCategoriesByRoomCode(roomCode);
@@ -222,12 +239,13 @@ public class RoomService {
     List<PollDTOResponse> pollDTOResponses = new ArrayList<>();
 
     for (SetCategoryKey categorySet : categories) {
-      System.out.println(categorySet);
       // Check if a poll with this categoryId exists in the results
-      PollDTO pollDTO =
-          pollDTOS.stream().filter(p -> p.categoryId().equals(categorySet.getCategoryId())).toList().getFirst();
+      List<PollDTO> pollDTOs =
+          pollDTOS.stream()
+              .filter(p -> p.categoryId().equals(categorySet.getCategoryId()))
+              .toList();
 
-      if (pollDTO == null) {
+      if (pollDTOs.isEmpty()) {
         // Create an empty PollDTO for a category that has no voting data
         pollDTOResponses.add(
             new PollDTOResponse(
@@ -236,15 +254,12 @@ public class RoomService {
                 null, // or an empty list,
                 0));
       } else {
-        pollDTOResponses.add(new PollDTOResponse(
-                pollDTO.pollId(),
-                categorySet,
-                pollDTO.choices(),
-                pollDTO.participantsCount()
-        ));
+        PollDTO pollDTO = pollDTOs.getFirst();
+        pollDTOResponses.add(
+            new PollDTOResponse(
+                pollDTO.pollId(), categorySet, pollDTO.choices(), pollDTO.participantsCount()));
       }
     }
-    System.out.println(pollDTOResponses);
     return pollDTOResponses;
   }
 
@@ -270,5 +285,11 @@ public class RoomService {
         room.getParticipants(),
         room.getOwnerId(),
         room.getCreatedAt());
+  }
+
+  public Boolean isParticipant(String roomCode, Long userId) {
+    if (!roomRepository.existsByRoomCode(roomCode)) return false;
+    System.out.println("user id: " + userId);
+    return roomRepository.existsParticipantInRoom(roomCode, userId);
   }
 }

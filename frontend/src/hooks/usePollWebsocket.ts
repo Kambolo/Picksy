@@ -9,6 +9,7 @@ import {
 import SockJS from "sockjs-client";
 import type { PollMessage } from "../types/PollMessage";
 import type { PollResultsMessage } from "../types/PollResultsMessage";
+import { useUser } from "../context/userContext";
 
 interface usePollWebsocketReturn {
   isConnected: boolean;
@@ -30,6 +31,7 @@ const usePollWebsocket = (
   const [error, setError] = useState<string | null>(null);
 
   const stompClientRef = useRef<Client | null>(null);
+  const { user } = useUser();
 
   useEffect(() => {
     if (!roomCode || !categoryId) {
@@ -75,7 +77,9 @@ const usePollWebsocket = (
   }, []);
 
   const setup = (participantsCount: number) => {
+    
     const message: PollMessage = {
+      userId: user && user.id ? user.id : -1,
       optionsId: [],
       messageType: "SETUP",
       participantsCount: participantsCount,
@@ -85,6 +89,7 @@ const usePollWebsocket = (
 
   const vote = (optionsId: number[]) => {
     const message: PollMessage = {
+      userId: user && user.id ? user.id : -1,
       optionsId,
       messageType: "VOTE",
       participantsCount: 0,
@@ -94,6 +99,7 @@ const usePollWebsocket = (
 
   const updateParticipanCount = (participantsCount: number) => {
     const message: PollMessage = {
+      userId: user && user.id ? user.id : -1,
       optionsId: [],
       messageType: "UPDATE_PARTICIPANT_COUNT",
       participantsCount: participantsCount,
@@ -103,6 +109,7 @@ const usePollWebsocket = (
 
   const increaseVotedCount = () => {
     const message: PollMessage = {
+      userId: user && user.id ? user.id : -1,
       optionsId: [],
       messageType: "INCREASE_VOTED_COUNT",
       participantsCount: -1,
@@ -113,6 +120,7 @@ const usePollWebsocket = (
 
   const end = () => {
     const message: PollMessage = {
+      userId: user && user.id ? user.id : -1,
       optionsId: [],
       messageType: "END",
       participantsCount: 0,

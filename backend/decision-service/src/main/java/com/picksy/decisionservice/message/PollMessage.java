@@ -11,6 +11,7 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 public class PollMessage {
+    private Long userId;
     private List<Long> optionsId;
     private MessageType messageType;
     private int participantsCount;

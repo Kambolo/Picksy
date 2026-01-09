@@ -8,6 +8,7 @@ type MessageType =
   | "INCREASE_VOTED_COUNT";
 
 export type PollMessage = {
+  userId: number;
   optionsId: number[] | null;
   messageType: MessageType;
   participantsCount: number;

@@ -10,9 +10,11 @@ const ResultPage = () => {
   const roomCode: string = useParams().roomCode || "";
   const { error, categories, loading } = useResults({ roomCode });
   const { showMore, handleShowMore } = useShowMore();
+  console.log(categories);
 
   // Grupowanie kategorii po setId
   const groupedBySet = categories.reduce((acc, category) => {
+    if (!category) return acc; // Skip null categories
     if (!acc[category.setId]) {
       acc[category.setId] = {
         setId: category.setId,

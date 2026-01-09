@@ -1,5 +1,5 @@
 import React, { type ReactElement } from "react";
-import { FaUser, FaEnvelope, FaFileAlt } from "react-icons/fa";
+import { FaUser, FaFileAlt } from "react-icons/fa";
 import "./ProfileForm.css";
 import type { UserProfile } from "../../types/UserProfile";
 

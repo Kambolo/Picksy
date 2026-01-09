@@ -49,3 +49,19 @@ export function getParticipantsCount(roomCode: string) {
 export function getRoomsHistory() {
   return apiRequest(`api/room/secure/history`, "GET", true);
 }
+
+export function joinRoom(roomCode: string, userId: number, username: string) {
+  return apiRequest(`api/room/public/${roomCode}/join`, "PATCH", true, false, {
+    roomCode,
+    userId,
+    username,
+  });
+}
+
+export function leaveRoom(roomCode: string, userId: number, username: string) {
+  return apiRequest(`api/room/public/${roomCode}/leave`, "PATCH", true, false, {
+    roomCode,
+    userId,
+    username,
+  });
+}

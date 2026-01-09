@@ -5,6 +5,7 @@ import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -15,4 +16,7 @@ public interface PollRepository extends JpaRepository<Poll, Long> {
     Optional<List<Poll>> findAllByRoomCode(String roomCode);
     @Query("SELECT p FROM Poll p LEFT JOIN FETCH p.choices WHERE p.roomCode = :roomCode")
     List<Poll> findAllWithChoicesByRoomCode(String roomCode);
+    @Transactional
+    void deleteByCategoryId(Long categoryId);
+    List<Poll> findAllByCategoryId(Long categoryId);
 }

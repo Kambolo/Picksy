@@ -1,5 +1,6 @@
 package com.picksy.categoryservice.service;
 
+import com.picksy.DeletionEvent;
 import com.picksy.categoryservice.exception.FileUploadException;
 import com.picksy.categoryservice.exception.ForbiddenAccessException;
 import com.picksy.categoryservice.exception.InvalidRequestException;
@@ -12,6 +13,7 @@ import com.picksy.categoryservice.request.OptionBody;
 import com.picksy.categoryservice.response.CategoryDTO;
 import com.picksy.categoryservice.response.CategoryWithOptionsDTO;
 import com.picksy.categoryservice.response.OptionDTO;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
@@ -30,8 +32,11 @@ public class OptionService {
     private final CategoryService categoryService;
     private final FileUploadService fileUploadService;
 
+    private static final String TOPIC = "category-deletion-topic";
+    private final KafkaTemplate<String, Object> kafkaTemplate;
+
     private final String DEFAULT_PHOTO_URL =
-            "https://res.cloudinary.com/dctiucda1/image/upload/v1766408430/default_suo7u0.png";
+            "https://res.cloudinary.com/dctiucda1/image/upload/v1767609634/default_kbvsaj.png";
 
     public Option findById(Long id) {
         return optionRepository
@@ -106,6 +111,7 @@ public class OptionService {
         removeImgInternal(userId, role, id, option);
 
         categoryRepository.save(category);
+        kafkaTemplate.send(TOPIC, new DeletionEvent(id, "OPTION"));
     }
 
     @Transactional

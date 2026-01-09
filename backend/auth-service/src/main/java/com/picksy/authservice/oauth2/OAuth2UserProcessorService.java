@@ -62,7 +62,7 @@ public class OAuth2UserProcessorService {
         ResponseCookie.from("jwt", jwt)
             .httpOnly(true)
             .secure(true)
-            .sameSite("Strict")
+            .sameSite("Lax")
             .path("/")
             .maxAge(24 * 60 * 60)
             .build();

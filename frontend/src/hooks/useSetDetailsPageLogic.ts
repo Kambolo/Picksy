@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import {
-  addCategoryToSet,
   deleteSet,
   removeCategoryFromSet,
   updateSet,

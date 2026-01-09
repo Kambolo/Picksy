@@ -12,7 +12,7 @@ const JoinRoom: React.FC = () => {
   const [error, setError] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const navigate = useNavigate();
-  const { user } = useUser();
+  const { user, setUser } = useUser();
 
   const handleJoinRoom = async () => {
     setError("");
@@ -40,10 +40,16 @@ const JoinRoom: React.FC = () => {
     else if (response.result.voting_started)
       setError("Głosowanie juz się rozpoczęło");
     else {
-      const participants = Object.entries(response.result.participants);
-      const id = user ? user.id : -participants.length;
-
-      navigate("/room/" + roomCode, { state: { id, username } });
+      if (!user) {
+        setUser({
+          id: -1,
+          username: username.trim(),
+          email: "",
+          isBlocked: false,
+          role: "USER",
+        });
+      }
+      navigate("/room/" + roomCode);
     }
     setIsLoading(false);
   };

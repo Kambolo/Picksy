@@ -27,9 +27,14 @@ public class DecisionService {
   private final ChoiceRepository choiceRepository;
   private final PollRepository pollRepository;
   private final CategoryClient categoryClient;
+  private final RoomClient roomClient;
 
+  @Transactional
   public void messageHandling(String roomCode, Long catId, PollMessage pollMessage) {
-    System.out.println(pollMessage.toString());
+    System.out.println(roomClient.isParticipant(roomCode, pollMessage.getUserId()).block());
+    if (Boolean.FALSE.equals(roomClient.isParticipant(roomCode, pollMessage.getUserId()).block()))
+        return;
+
     switch (pollMessage.getMessageType()) {
       case MessageType.SETUP:
         setup(roomCode, catId, pollMessage);
@@ -64,7 +69,7 @@ public class DecisionService {
 
       messagingTemplate.convertAndSend(
           "/topic/poll/" + roomCode + "/" + catId,
-          new PollMessage(null, MessageType.START, poll.getParticipantsCount()));
+          new PollMessage((long)0, null, MessageType.START, poll.getParticipantsCount()));
 
     } catch (DataIntegrityViolationException ex) {
       // Another thread inserted concurrently – now fetch and proceed
@@ -120,7 +125,7 @@ public class DecisionService {
 
         messagingTemplate.convertAndSend(
             "/topic/poll/" + roomCode + "/" + catId,
-            new PollMessage(winner, MessageType.MATCH, poll.getParticipantsCount()));
+            new PollMessage((long)0, winner, MessageType.MATCH, poll.getParticipantsCount()));
       }
     }
     // PICK
@@ -129,11 +134,11 @@ public class DecisionService {
       List<Choice> choices =
           choiceRepository.findByPollIdAndOptionIdIn(poll.getId(), pollMessage.getOptionsId());
 
-      for(Long optionId: pollMessage.getOptionsId()) {
-          boolean anyMatch = choices.stream().anyMatch(choice -> choice.getOptionId().equals(optionId));
+      for (Long optionId : pollMessage.getOptionsId()) {
+        boolean anyMatch =
+            choices.stream().anyMatch(choice -> choice.getOptionId().equals(optionId));
 
-          if(!anyMatch)
-            choices.add(Choice.builder().optionId(optionId).poll(poll).count(0).build());
+        if (!anyMatch) choices.add(Choice.builder().optionId(optionId).poll(poll).count(0).build());
       }
 
       // increase count for choices
@@ -148,7 +153,7 @@ public class DecisionService {
         // if everyone voted send END message
         messagingTemplate.convertAndSend(
             "/topic/poll/" + roomCode + "/" + catId,
-            new PollMessage(null, MessageType.END, poll.getParticipantsCount()));
+            new PollMessage((long)0, null, MessageType.END, poll.getParticipantsCount()));
       }
     }
   }
@@ -159,7 +164,7 @@ public class DecisionService {
         .orElseThrow(() -> new BadRequestException("Poll not found"));
     messagingTemplate.convertAndSend(
         "/topic/poll/" + roomCode + "/" + catId,
-        new PollMessage(null, MessageType.END, pollMessage.getParticipantsCount()));
+        new PollMessage((long)0, null, MessageType.END, pollMessage.getParticipantsCount()));
   }
 
   @Transactional
@@ -188,12 +193,11 @@ public class DecisionService {
     messagingTemplate.convertAndSend(
         "/topic/poll/" + roomCode + "/" + catId,
         new PollMessage(
-            votedCount, MessageType.INCREASE_VOTED_COUNT, pollMessage.getParticipantsCount()));
+                (long)0, votedCount, MessageType.INCREASE_VOTED_COUNT, pollMessage.getParticipantsCount()));
   }
 
   public List<PollDTO> getResults(String roomCode) {
     List<Poll> polls = pollRepository.findAllWithChoicesByRoomCode(roomCode);
-    System.out.println("polls: " + polls);
 
     if (polls.isEmpty()) {
       throw new BadRequestException("Poll not found");
@@ -209,7 +213,6 @@ public class DecisionService {
       pollDTOS.add(
           new PollDTO(poll.getId(), poll.getCategoryId(), choiceDTOS, poll.getParticipantsCount()));
     }
-    System.out.println("pollDTOS: " + pollDTOS);
 
     return pollDTOS;
   }

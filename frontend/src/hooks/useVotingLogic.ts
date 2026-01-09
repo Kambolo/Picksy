@@ -74,6 +74,7 @@ export const useVotingLogic = (
       switch (message.messageType) {
         case "START":
           setHasStarted(true);
+          console.log("Voting started");
           break;
         case "MATCH":
           setMatchedId(message.optionsId?.[0] ?? -1);
@@ -97,7 +98,6 @@ export const useVotingLogic = (
     } else {
       if (right) vote(optionIds);
       if (isLast) {
-        console.log("ejoooo jestttt");
         increaseVotedCount();
         setHasVoted(true);
       }

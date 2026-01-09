@@ -36,8 +36,9 @@ const RoomPage = () => {
     );
 
   // loading category
-  if (categoryId !== -1 && (isLoadingCategory || !currentCategory))
+  if (categoryId !== -1 && (isLoadingCategory || !currentCategory)) {
     return <Loading />;
+  }
 
   // voting finished
   if (showResults) {

@@ -8,13 +8,13 @@ import {
 } from "react";
 import SockJS from "sockjs-client";
 import type { RoomMessage } from "../types/RoomMessage";
+import { useUser } from "../context/userContext";
+import { leaveRoom } from "../api/roomApi";
 
 interface useRoomWebsocketReturn {
   isConnected: boolean;
   error: string | null;
   setError: Dispatch<SetStateAction<string | null>>;
-  joinRoom: (username: string, id: number | null) => void;
-  leaveRoom: (userId: number, username: string) => void;
 }
 
 const useRoomWebsocket = (
@@ -25,6 +25,7 @@ const useRoomWebsocket = (
   const [error, setError] = useState<string | null>(null);
 
   const stompClientRef = useRef<Client | null>(null);
+  const { user, setUser } = useUser();
 
   useEffect(() => {
     if (!roomCode) {
@@ -43,6 +44,8 @@ const useRoomWebsocket = (
         });
       },
       onDisconnect: () => {
+        leaveRoom(roomCode || "", user?.id || -1, user?.username || ""); // notify server about disconnection
+        user && user.id < 0 && setUser(null);
         setIsConnected(false);
       },
       onStompError: (frame) => {
@@ -64,52 +67,10 @@ const useRoomWebsocket = (
     };
   }, []);
 
-  const joinRoom = (username: string, id: number | null) => {
-    const stompClient = stompClientRef.current;
-    if (stompClient && stompClient.connected) {
-      const message: RoomMessage = {
-        userId: id,
-        username: username,
-        type: "JOIN",
-      };
-      stompClient.publish({
-        destination: "/app/public/room/" + roomCode + "/join",
-        body: JSON.stringify(message),
-      });
-    } else {
-      console.error("Stomp client is not connected");
-      //setError("Nie mozna dołączyć do pokoju");
-    }
-  };
-
-  const leaveRoom = (userId: number, username: string) => {
-    const stompClient = stompClientRef.current;
-    if (!stompClient || !isConnected) {
-      return;
-    }
-
-    if (stompClient && stompClient.connected) {
-      const message: RoomMessage = {
-        userId,
-        username,
-        type: "LEAVE",
-      };
-      stompClient.publish({
-        destination: "/app/public/room/" + roomCode + "/leave",
-        body: JSON.stringify(message),
-      });
-    } else {
-      console.error("Stomp client is not connected");
-      //setError("Nie mozna dołączyć do pokoju");
-    }
-  };
-
   return {
     isConnected,
     error,
     setError,
-    joinRoom,
-    leaveRoom,
   };
 };
 
